@@ -24,11 +24,11 @@ ZCTAs, counties, CBSAs, places, and weather stations as interchangeable.
 
 ## Screenshots
 
-Add private screenshots after local review:
+Private PR screenshots are included for collaborator review:
 
 | Overview | ZIP Explorer | Scenario Builder |
 | --- | --- | --- |
-| `docs/screenshots/overview.png` | `docs/screenshots/zip-explorer.png` | `docs/screenshots/scenario-builder.png` |
+| ![Overview dashboard](docs/screenshots/overview.png) | ![ZIP explorer](docs/screenshots/zip-explorer.png) | ![Scenario builder](docs/screenshots/scenario-builder.png) |
 
 Do not place screenshots containing restricted data in a public location.
 
@@ -48,7 +48,8 @@ flowchart LR
 The browser UI is deliberately dependency-free so it runs immediately in the controlled
 research workspace. For managed environments, `backend/fastapi_app.py` exposes the same
 service through FastAPI with Pydantic request validation. `backend/server.py` is the
-zero-install local runner.
+zero-install local runner. `package.json` and `playwright.config.ts` define the managed
+Node-based critical-flow test path for environments with `npm` available.
 
 ## Data Inputs
 
@@ -105,6 +106,13 @@ node --check frontend/app.js
 python3 -m py_compile backend/*.py scripts/*.py tests/*.py
 ```
 
+In a Node environment with `npm` available:
+
+```bash
+npm install
+npm run test:e2e
+```
+
 The regression suite checks:
 
 - exactly 20 strata and one selection per stratum
@@ -128,24 +136,20 @@ deployment.
 
 ## Private GitHub Publication
 
-Do not create or push a repository until the owner confirms:
+Confirmed private repository:
+[hampochimacyril/Location-representation-explorer](https://github.com/hampochimacyril/Location-representation-explorer)
 
-1. the exact private GitHub repository URL associated with **Chima Cyril Hampo**
-2. whether this is a new private repository or a new folder and branch in an existing
-   private repository
-
-After confirmation:
+Active branch:
 
 ```bash
-git switch -c feature/location-representation-explorer
-git add 07_Applications/location-representation-explorer
-git status --short
-git commit -m "Add representative location explorer"
-git push -u <confirmed-private-remote> feature/location-representation-explorer
+feature/location-representation-explorer
 ```
 
-Open a **draft** pull request only against the confirmed private remote. Review
-[docs/privacy_and_repository_rules.md](docs/privacy_and_repository_rules.md) first.
+Draft pull request:
+[#1 Add Representative Location Explorer](https://github.com/hampochimacyril/Location-representation-explorer/pull/1)
+
+Review [docs/privacy_and_repository_rules.md](docs/privacy_and_repository_rules.md) before
+adding collaborators, screenshots, deployment targets, or any additional data artifacts.
 
 ## Known Limitations
 
@@ -156,4 +160,3 @@ Open a **draft** pull request only against the confirmed private remote. Review
 - New scenario alternatives remain marked `REVIEW REQUIRED` until an exact ResStock
   enumeration mapping is curated and verified.
 - The map shows catchment centroids, not full tract or CBSA polygons.
-
