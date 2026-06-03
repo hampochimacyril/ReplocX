@@ -1,0 +1,17 @@
+{
+  "name": "representative-location-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Private decision-support app for transparent representative U.S. location selection.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:frontend:syntax": "node --check frontend/app.js",
+    "verify:python": "python3 -m unittest discover -s tests -v"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  }
+}
+
