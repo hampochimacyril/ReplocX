@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Representative Location Explorer Demo Renderer</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #071827;
+        color: #dce8eb;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 20% 10%, rgba(201, 154, 56, 0.22), transparent 28rem),
+          radial-gradient(circle at 82% 82%, rgba(10, 150, 144, 0.22), transparent 32rem),
+          #071827;
+      }
+      main {
+        width: min(1280px, calc(100vw - 40px));
+      }
+      canvas,
+      video {
+        width: 100%;
+        border: 1px solid rgba(216, 240, 237, 0.2);
+        border-radius: 22px;
+        box-shadow: 0 26px 90px rgba(0, 0, 0, 0.34);
+        background: #071827;
+      }
+      .panel {
+        margin-top: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        color: #b8cfd4;
+        font-size: 14px;
+      }
+      a {
+        color: #d8f0ed;
+        background: #087f7b;
+        border-radius: 999px;
+        padding: 10px 14px;
+        text-decoration: none;
+        font-weight: 800;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <canvas id="stage" width="1280" height="720" aria-label="Representative Location Explorer demo video canvas"></canvas>
+      <video id="preview" class="hidden" controls playsinline></video>
+      <textarea id="video-parts" class="hidden" aria-hidden="true"></textarea>
+      <div class="panel">
+        <span id="status">Preparing demo video...</span>
+        <a id="download" class="hidden" download="representative-location-explorer-demo.webm">Download video</a>
+      </div>
+    </main>
+    <script>
+      const canvas = document.querySelector("#stage");
+      const ctx = canvas.getContext("2d");
+      const statusEl = document.querySelector("#status");
+      const preview = document.querySelector("#preview");
+      const download = document.querySelector("#download");
+      const partsEl = document.querySelector("#video-parts");
+      const W = canvas.width;
+      const H = canvas.height;
+      const fps = 30;
+
+      const scenes = [
+        {
+          image: null,
+          eyebrow: "Research decision support",
+          title: "Representative Location Explorer",
+          subtitle:
+            "Transparent, reproducible selection of representative U.S. locations for building-stock and heat-health simulations.",
+          duration: 3.6,
+        },
+        {
+          image: "scenes/01-overview.png",
+          eyebrow: "Overview dashboard",
+          title: "A national portfolio in one view",
+          subtitle:
+            "Track 20 climate-region x urbanicity strata, candidate coverage, verified ResStock filters, station context, and weather-QC readiness.",
+          duration: 5.2,
+        },
+        {
+          image: "scenes/02-zip-explorer.png",
+          eyebrow: "ZIP code explorer",
+          title: "ZIP search without geographic shortcuts",
+          subtitle:
+            "Resolve ZIPs to Census-compatible context, preserve leading zeros, surface crosswalk uncertainty, and explain the simulation catchment.",
+          duration: 5.2,
+        },
+        {
+          image: "scenes/03-scenario-builder.png",
+          eyebrow: "Scenario builder",
+          title: "Reproducible scenarios, live",
+          subtitle:
+            "Adjust density screening, score weights, station-distance rules, uniqueness, and research-priority overrides with a clear audit trail.",
+          duration: 5.2,
+        },
+        {
+          image: "scenes/04-candidate-ranking.png",
+          eyebrow: "Candidate ranking",
+          title: "Every candidate is inspectable",
+          subtitle:
+            "Sort, filter, compare, and export scored candidates with station distances, ResStock fields, and verification status visible.",
+          duration: 5.2,
+        },
+        {
+          image: "scenes/05-allocation-comparison.png",
+          eyebrow: "Allocation comparison",
+          title: "Show the tradeoff, not just the answer",
+          subtitle:
+            "Compare independent top-ranked selections with distinct-location allocation and explain substitutions and score differences.",
+          duration: 5.2,
+        },
+        {
+          image: "scenes/06-methodology.png",
+          eyebrow: "Methodology and sources",
+          title: "Methods appendix built in",
+          subtitle:
+            "Document why weather stations stay separate, why ZIPs require crosswalks, how scoring works, and what still needs QC.",
+          duration: 5.2,
+        },
+        {
+          image: null,
+          eyebrow: "Representative Location Explorer",
+          title: "Built for transparent simulation handoffs",
+          subtitle:
+            "Private by design. Deterministic by default. Ready for academic review, scenario export, and ResStock site-list preparation.",
+          duration: 4.0,
+        },
+      ];
+
+      const colors = {
+        navy: "#071827",
+        navy2: "#0b2235",
+        teal: "#0a9690",
+        tealLight: "#d8f0ed",
+        gold: "#c99a38",
+        white: "#ffffff",
+        slate: "#dce8eb",
+      };
+
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      function drawWrapped(text, x, y, maxWidth, lineHeight, font, color, align = "left") {
+        ctx.font = font;
+        ctx.fillStyle = color;
+        ctx.textAlign = align;
+        const words = text.split(" ");
+        let line = "";
+        const lines = [];
+        for (const word of words) {
+          const test = line ? `${line} ${word}` : word;
+          if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = test;
+          }
+        }
+        if (line) lines.push(line);
+        lines.forEach((row, index) => ctx.fillText(row, x, y + index * lineHeight));
+      }
+
+      function drawBackground(frame) {
+        const gradient = ctx.createLinearGradient(0, 0, W, H);
+        gradient.addColorStop(0, colors.navy);
+        gradient.addColorStop(1, colors.navy2);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = colors.teal;
+        ctx.beginPath();
+        ctx.arc(1125, 620, 230, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = colors.gold;
+        ctx.beginPath();
+        ctx.arc(92, 58, 180, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        ctx.strokeStyle = "rgba(216, 240, 237, 0.08)";
+        ctx.lineWidth = 1;
+        for (let x = -120; x < W + 160; x += 54) {
+          ctx.beginPath();
+          ctx.moveTo(x + (frame % 54), 0);
+          ctx.lineTo(x - 180 + (frame % 54), H);
+          ctx.stroke();
+        }
+      }
+
+      function drawLockup() {
+        ctx.save();
+        roundRect(54, 48, 42, 42, 12);
+        ctx.fillStyle = "rgba(216, 240, 237, 0.13)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(101, 199, 190, 0.75)";
+        ctx.stroke();
+        ctx.font = "800 22px Inter, system-ui, sans-serif";
+        ctx.fillStyle = "#b8eee8";
+        ctx.textAlign = "center";
+        ctx.fillText("R", 75, 76);
+        ctx.font = "700 15px Inter, system-ui, sans-serif";
+        ctx.fillStyle = colors.white;
+        ctx.textAlign = "left";
+        ctx.fillText("Representative Location Explorer", 108, 65);
+        ctx.font = "800 10px Inter, system-ui, sans-serif";
+        ctx.fillStyle = "#88aeb8";
+        ctx.fillText("PRIVATE RESEARCH DEMO", 108, 82);
+        ctx.restore();
+      }
+
+      function drawScene(scene, image, progress, frame) {
+        drawBackground(frame);
+        drawLockup();
+
+        if (image) {
+          const card = { x: 384, y: 98, w: 852, h: 540 };
+          ctx.save();
+          roundRect(card.x - 12, card.y - 12, card.w + 24, card.h + 24, 24);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+          ctx.stroke();
+          roundRect(card.x, card.y, card.w, card.h, 18);
+          ctx.clip();
+          const zoom = 1.018 + 0.03 * progress;
+          const dw = card.w * zoom;
+          const dh = card.h * zoom;
+          ctx.drawImage(image, card.x - (dw - card.w) / 2, card.y - (dh - card.h) / 2, dw, dh);
+          ctx.restore();
+
+          roundRect(card.x, card.y, card.w, card.h, 18);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+          ctx.stroke();
+
+          roundRect(56, 520, 292, 58, 18);
+          ctx.fillStyle = "rgba(10, 150, 144, 0.22)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(216, 240, 237, 0.28)";
+          ctx.stroke();
+          drawWrapped("Verified filters · ZIP clarity · Export-ready scenarios", 76, 554, 250, 20, "800 15px Inter, system-ui, sans-serif", colors.tealLight);
+        }
+
+        const center = !image;
+        const x = center ? W / 2 : 58;
+        const maxWidth = center ? 970 : 285;
+        const titleY = center ? 284 : 178;
+        ctx.textAlign = center ? "center" : "left";
+        ctx.font = "900 13px Inter, system-ui, sans-serif";
+        ctx.fillStyle = "#65c7be";
+        ctx.fillText(scene.eyebrow.toUpperCase(), x, titleY - 48);
+        drawWrapped(scene.title, x, titleY, maxWidth, center ? 60 : 43, center ? "900 52px Inter, system-ui, sans-serif" : "900 36px Inter, system-ui, sans-serif", colors.white, center ? "center" : "left");
+        drawWrapped(scene.subtitle, x, titleY + (center ? 118 : 126), maxWidth, center ? 34 : 27, center ? "400 25px Inter, system-ui, sans-serif" : "400 19px Inter, system-ui, sans-serif", colors.slate, center ? "center" : "left");
+
+        if (center) {
+          roundRect(438, 502, 404, 48, 24);
+          ctx.fillStyle = "rgba(201, 154, 56, 0.20)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(201, 154, 56, 0.58)";
+          ctx.stroke();
+          ctx.font = "700 17px Inter, system-ui, sans-serif";
+          ctx.fillStyle = "#f8eccf";
+          ctx.textAlign = "center";
+          ctx.fillText("For national simulation planning and academic review", 640, 533);
+        }
+
+        roundRect(54, 676, 1172, 6, 3);
+        ctx.fillStyle = "rgba(255,255,255,0.14)";
+        ctx.fill();
+        roundRect(54, 676, 1172 * progress, 6, 3);
+        ctx.fillStyle = "#65c7be";
+        ctx.fill();
+      }
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+          image.src = src;
+        });
+      }
+
+      function pickMimeType() {
+        const options = [
+          "video/webm;codecs=vp9",
+          "video/webm;codecs=vp8",
+          "video/webm",
+        ];
+        return options.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+      }
+
+      function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(",")[1]);
+          reader.onerror = () => reject(reader.error || new Error("Unable to encode video chunk"));
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function render() {
+        window.demoDone = false;
+        window.demoError = null;
+        window.demoVideoBase64Parts = [];
+        window.demoVideoChunkCount = 0;
+        window.demoDebug = [];
+        partsEl.value = "";
+        statusEl.dataset.done = "false";
+        statusEl.dataset.error = "";
+        statusEl.dataset.mime = "";
+        statusEl.dataset.size = "0";
+        statusEl.dataset.parts = "0";
+        const mark = (message) => {
+          window.demoDebug.push({ message, at: new Date().toISOString() });
+          statusEl.textContent = message;
+        };
+
+        const images = new Map();
+        for (const scene of scenes) {
+          if (scene.image) images.set(scene.image, await loadImage(scene.image));
+        }
+        mark("Loaded demo scenes. Starting recording...");
+
+        const mimeType = pickMimeType();
+        const chunks = [];
+        const chunkBase64 = [];
+        const chunkEncoders = [];
+        const recorderOptions = mimeType ? { mimeType, videoBitsPerSecond: 4_800_000 } : { videoBitsPerSecond: 4_800_000 };
+        const recorder = new MediaRecorder(canvas.captureStream(fps), recorderOptions);
+        recorder.ondataavailable = (event) => {
+          if (!event.data.size) return;
+          chunks.push(event.data);
+          window.demoVideoChunkCount = chunks.length;
+          const index = chunkBase64.length;
+          chunkBase64.push(null);
+          window.demoVideoBase64Parts = chunkBase64;
+          chunkEncoders.push(
+            blobToBase64(event.data).then((value) => {
+              chunkBase64[index] = value;
+              window.demoVideoBase64Parts = chunkBase64;
+            }),
+          );
+        };
+        const done = new Promise((resolve) => {
+          recorder.onstop = resolve;
+        });
+
+        recorder.start(1000);
+        let frame = 0;
+        for (const scene of scenes) {
+          const image = scene.image ? images.get(scene.image) : null;
+          const frames = Math.round(scene.duration * fps);
+          for (let local = 0; local < frames; local += 1) {
+            const progress = frames <= 1 ? 1 : local / (frames - 1);
+            drawScene(scene, image, progress, frame);
+            statusEl.textContent = `Rendering ${scene.eyebrow}...`;
+            frame += 1;
+            await new Promise((resolve) => setTimeout(resolve, 1000 / fps));
+          }
+        }
+        recorder.stop();
+        await done;
+        mark(`Encoding ${chunks.length} recorded chunks...`);
+        await Promise.all(chunkEncoders);
+
+        const blob = new Blob(chunks, { type: mimeType || "video/webm" });
+        const url = URL.createObjectURL(blob);
+        preview.src = url;
+        preview.classList.remove("hidden");
+        download.href = url;
+        download.classList.remove("hidden");
+
+        window.demoVideoBase64Parts = chunkBase64;
+        window.demoVideoMimeType = blob.type;
+        window.demoVideoSize = blob.size;
+        window.demoDone = true;
+        partsEl.value = JSON.stringify(chunkBase64);
+        statusEl.dataset.done = "true";
+        statusEl.dataset.mime = blob.type;
+        statusEl.dataset.size = String(blob.size);
+        statusEl.dataset.parts = String(chunkBase64.length);
+        mark(`Rendered ${Math.round(blob.size / 1024 / 1024 * 10) / 10} MB demo video.`);
+      }
+
+      render().catch((error) => {
+        window.demoError = error.message || String(error);
+        statusEl.dataset.error = window.demoError;
+        statusEl.textContent = `Render failed: ${window.demoError}`;
+      });
+    </script>
+  </body>
+</html>
