@@ -371,7 +371,9 @@ const bar=document.getElementById("bar");
 let idx=-1, muted=false, running=false, timer=null, safety=null, chosenVoiceName=null;
 const synth=window.speechSynthesis;
 // Premium/Natural/Siri voices sound dramatically better than the legacy defaults.
-const PREF=["Ava (Premium)","Zoe (Premium)","Allison (Premium)","Samantha","Ava","Allison","Siri","Google US English","Microsoft Aria","Microsoft Jenny","Serena (Premium)","Daniel","Karen"];
+// Reliable, audible defaults first. (Siri voices are intentionally NOT auto-picked:
+// the browser often exposes them but plays silence; users can still select one.)
+const PREF=["Samantha","Ava (Premium)","Ava","Allison (Premium)","Allison","Google US English","Microsoft Aria","Microsoft Jenny","Daniel","Karen"];
 const isNice=v=>/premium|natural|siri|\(enhanced\)/i.test(v.name);
 
 function enVoices(){ return synth ? synth.getVoices().filter(v=>/^en/i.test(v.lang)) : []; }
@@ -405,24 +407,33 @@ function countTo(el,target,dur){
     el.textContent=(target*e).toFixed(1)+"%"; if(k<1) requestAnimationFrame(step); })(t0);
 }
 
+let token=0;
 function play(n){
   if(n>=SCENES.length){ return finish(); }
   setScene(n);
   clearTimeout(timer); clearTimeout(safety);
-  const advance=()=>{ if(idx===n){ play(n+1); } };
-  if(synth && !muted){
-    try{
-      const u=new SpeechSynthesisUtterance(SCENES[n].vo);
-      const v=pickVoice(); if(v) u.voice=v;
-      u.rate=0.98; u.pitch=1.0; u.volume=1.0; u.lang=(v&&v.lang)||"en-US";
-      let advanced=false; const go=()=>{ if(!advanced){ advanced=true; advance(); } };
-      u.onend=go; u.onerror=go;
-      synth.cancel(); synth.speak(u);
-      safety=setTimeout(go, SCENES[n].ms+6000); // only if onend never fires
-    }catch(e){ timer=setTimeout(advance, SCENES[n].ms); }
-  } else {
-    timer=setTimeout(advance, SCENES[n].ms);
-  }
+  const my=++token;
+  const next=()=>{ if(my===token) play(n+1); };
+  if(synth && !muted){ speakScene(n,false,my,next); }
+  else { timer=setTimeout(next, SCENES[n].ms); }
+}
+
+function speakScene(n, useDefault, my, next){
+  try{
+    const u=new SpeechSynthesisUtterance(SCENES[n].vo);
+    if(!useDefault){ const v=pickVoice(); if(v) u.voice=v; }
+    u.lang=(u.voice&&u.voice.lang)||"en-US"; u.rate=0.98; u.pitch=1.0; u.volume=1.0;
+    let started=false;
+    u.onstart=()=>{ started=true; };
+    u.onend=()=>{ if(my===token) next(); };
+    u.onerror=()=>{ if(my!==token) return;
+      if(!useDefault){ try{synth.cancel();}catch(e){} speakScene(n,true,my,next); } else { next(); } };
+    // If a chosen voice plays silently (no onstart), retry once with the default voice.
+    setTimeout(()=>{ if(my===token && !started && !useDefault){ try{synth.cancel();}catch(e){} speakScene(n,true,my,next); } }, 1500);
+    // Safety: advance even if no events ever fire.
+    safety=setTimeout(()=>{ if(my===token) next(); }, SCENES[n].ms+9000);
+    synth.cancel(); synth.speak(u);
+  }catch(e){ if(my===token) timer=setTimeout(next, SCENES[n].ms); }
 }
 
 function finish(){
