@@ -228,11 +228,22 @@ function scoreBars(row) {
     .join("")}</div>`;
 }
 
+function aboutDemoBanner() {
+  const mode = app.dashboard?.provenance?.data_mode;
+  if (mode !== "demo" || app.dismissedDemoNote) return "";
+  return `<div class="info-banner gold" id="about-demo" style="align-items:flex-start">
+    <strong>About this demo.</strong>
+    <span>You're viewing a public preview running on a <strong>synthetic demonstration dataset</strong>, not real research data. The methodology, interface, and exports are identical to the production tool, which runs privately on the project's analytical outputs. Numbers here are illustrative only.
+    <button class="button small secondary" id="dismiss-demo" style="margin-left:8px">Got it</button></span>
+  </div>`;
+}
+
 function overview() {
   const { kpis, scenario, climate_distribution, urbanicity_distribution, score_distribution } = app.dashboard;
   const selected = scenario.selected;
   workspace.innerHTML = `
     ${intro("A reproducible national location strategy", "Explore how 20 representative target catchments are selected across five climate regions and four urbanicity categories. Building-stock geography, ZIP entry points, and weather stations stay deliberately separate.")}
+    ${aboutDemoBanner()}
     <div class="info-banner"><strong>Current scenario.</strong><span>Density-screened candidates at or above the 60th percentile are scored with the baseline 45 / 35 / 20 formula. Distinct target catchments are maximized, with a documented Philadelphia research-priority override for Mixed-Humid HDU.</span></div>
     <section class="kpi-grid">
       ${kpi("Target strata", kpis.target_strata, "5 climate regions × 4 urbanicity categories", "teal")}
@@ -260,6 +271,8 @@ function overview() {
       <div class="priority-card"><div class="badge-row">${badge("Mixed-Humid", "navy")}${badge("HDU")}${badge("Research priority", "gold")}</div><p><strong>Philadelphia-Camden-Wilmington, PA-NJ-DE-MD</strong><br>Unconstrained rank 2 · score ${score(selected.find(row => row.catchment_code === "37980")?.scenario_score)} · selected because the team has stronger local heat-health data coverage in Philadelphia.</p></div>
     </section>`;
   bindMapLayers(overview);
+  const dismiss = $("#dismiss-demo");
+  if (dismiss) dismiss.addEventListener("click", () => { app.dismissedDemoNote = true; $("#about-demo")?.remove(); });
 }
 
 function zipExplorer() {

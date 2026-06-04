@@ -148,7 +148,7 @@ def s_matrix(t):
     return L
 def s_zip(t):
     L=Image.new("RGBA",(W,H),(0,0,0,0)); dr=ImageDraw.Draw(L); a=int(255*envelope(t))
-    text(dr,(W/2,H*0.22),"ZIP CODES, DONE RIGHT",SANSB(24),TEAL,alpha=a,spacing=8)
+    text(dr,(W/2,H*0.22),"HOW IT WORKS  ·  SEARCH BY ZIP",SANSB(24),TEAL,alpha=a,spacing=6)
     # card
     cw,ch=720,300; x0=W/2-cw/2; y0=H*0.30
     dr.rounded_rectangle([x0,y0,x0+cw,y0+ch],radius=22,fill=(255,255,255,16),outline=(255,255,255,40))
@@ -169,7 +169,7 @@ def s_zip(t):
     return L
 def s_scenario(t):
     L=Image.new("RGBA",(W,H),(0,0,0,0)); dr=ImageDraw.Draw(L); a=int(255*envelope(t))
-    text(dr,(W/2,H*0.22),"BUILD A SCENARIO",SANSB(24),TEAL,alpha=a,spacing=8)
+    text(dr,(W/2,H*0.22),"HOW IT WORKS  ·  BUILD A SCENARIO",SANSB(24),TEAL,alpha=a,spacing=6)
     rows=[("Housing coverage",0.45),("Population density",0.35),("Population coverage",0.20),("Density screen",0.60)]
     bw=720; x0=W/2-bw/2+150; y=H*0.34
     for i,(lab,w) in enumerate(rows):
@@ -234,7 +234,46 @@ def s_cta(t):
         dr.text((cx,by+58),"representative-location-explorer.onrender.com",font=SANS(22),fill=SUB+(int(a*p2),),anchor="mm")
     return L
 
-SCENES=[(s_title,7.0),(s_problem,6.0),(s_matrix,7.0),(s_zip,7.0),(s_scenario,7.0),(s_kpi,7.0),(s_trust,6.0),(s_cta,6.0)]
+def s_audience(t):
+    L=Image.new("RGBA",(W,H),(0,0,0,0)); dr=ImageDraw.Draw(L); a=int(255*envelope(t))
+    text(dr,(W/2,H*0.18),"BUILT FOR THE PEOPLE WHO MODEL THE NATION",SANSB(22),TEAL,alpha=a,spacing=6)
+    text(dr,(W/2,H*0.28),"One defensible answer to “where?”",SERIF(56),INK,alpha=a)
+    cards=[("Modelers","Choose simulation sites","with a documented rationale"),
+           ("Researchers","Audit and reproduce","the method"),
+           ("Policy makers","See who and what","each place represents"),
+           ("Planners","Tie ZIP questions to","the right geography")]
+    cw,gap=340,32; x0=W/2-(4*cw+3*gap)/2; y0=H*0.40; ch=240
+    for i,(title,l1,l2) in enumerate(cards):
+        p=ease(clamp((t-0.2-i*0.12)/0.5))
+        if p<=0: continue
+        x=x0+i*(cw+gap); ca=int(a*p); yo=(1-p)*18
+        dr.rounded_rectangle([x,y0+yo,x+cw,y0+ch+yo],radius=16,fill=(255,255,255,int(15*p)),outline=(255,255,255,int(45*p)))
+        dr.ellipse([x+24,y0+30+yo,x+44,y0+50+yo],outline=TEAL+(ca,),width=3)
+        dr.text((x+30,y0+86+yo),title,font=SANSB(30),fill=INK+(ca,),anchor="lm")
+        dr.text((x+30,y0+140+yo),l1,font=SANS(20),fill=SUB+(ca,),anchor="lm")
+        dr.text((x+30,y0+168+yo),l2,font=SANS(20),fill=SUB+(ca,),anchor="lm")
+    return L
+
+def s_overview(t):
+    L=Image.new("RGBA",(W,H),(0,0,0,0)); dr=ImageDraw.Draw(L); a=int(255*envelope(t))
+    text(dr,(W/2,H*0.15),"HOW IT WORKS  ·  THE OVERVIEW DASHBOARD",SANSB(22),TEAL,alpha=a,spacing=5)
+    cards=[("20","Target strata",False),("20","Distinct locations",False),
+           ("2,959","Candidates scored",True),("20/20","Verified filters",False)]
+    cw,gap=300,28; x0=W/2-(4*cw+3*gap)/2; y0=H*0.24; ch=140
+    for i,(val,lab,teal) in enumerate(cards):
+        p=ease(clamp((t-0.15-i*0.1)/0.5))
+        if p<=0: continue
+        x=x0+i*(cw+gap); ca=int(a*p)
+        fill=(10,150,144,int(40*p)) if teal else (255,255,255,int(15*p))
+        out=(95,202,191,int(120*p)) if teal else (255,255,255,int(45*p))
+        dr.rounded_rectangle([x,y0,x+cw,y0+ch],radius=14,fill=fill,outline=out)
+        dr.text((x+cw/2,y0+58),val,font=SERIF(58),fill=INK+(ca,),anchor="mm")
+        dr.text((x+cw/2,y0+108),lab.upper(),font=SANSB(18),fill=TEAL+(ca,),anchor="mm")
+    draw_map(L, W*0.5, H*0.66, 0.52, reveal=clamp(t*1.4), glow=1)
+    dy,_=rise(t,d=0.4); text(dr,(W/2,H*0.92+dy),"The whole strategy at a glance — every stratum, its location, its station.",SANS(26),SUB,alpha=a)
+    return L
+
+SCENES=[(s_title,7.0),(s_audience,9.5),(s_problem,8.5),(s_matrix,8.5),(s_overview,8.5),(s_zip,9.0),(s_scenario,9.0),(s_kpi,9.0),(s_trust,8.0),(s_cta,7.0)]
 TOTAL=sum(d for _,d in SCENES)
 
 # ---- music bed ----
