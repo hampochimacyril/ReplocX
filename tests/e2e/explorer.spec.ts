@@ -14,7 +14,7 @@ test("ZIP explorer preserves leading zeros and explains geography scope", async 
   await page.getByLabel("ZIP code").fill("02108");
   await page.getByRole("button", { name: "Resolve ZIP" }).click();
   await expect(page.getByText("Resolved geography · 02108")).toBeVisible();
-  await expect(page.getByText("ZCTA")).toBeVisible();
+  await expect(page.getByText("ZCTA", { exact: true })).toBeVisible();
   await expect(page.getByText("25025 · Suffolk County")).toBeVisible();
   await expect(page.getByText("ZIP is an entry point.")).toBeVisible();
 });
