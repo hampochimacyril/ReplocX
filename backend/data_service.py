@@ -17,6 +17,24 @@ from .scoring import evaluate
 APP_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ANALYSIS_DIR = APP_ROOT.parents[1] / "location_selection" / "data" / "processed"
 DEFAULT_RAW_DIR = APP_ROOT.parents[1] / "location_selection" / "data" / "raw"
+DEMO_ANALYSIS_DIR = APP_ROOT / "data" / "demo"
+
+
+def _resolve_analysis_dir() -> tuple[Path, str]:
+    """Pick the analysis directory and report which mode is active.
+
+    Precedence: an explicit ``RLE_ANALYSIS_DATA_DIR`` override (used verbatim, so
+    a misconfigured path fails loudly) -> the real processed outputs if present
+    -> the bundled synthetic demonstration dataset, so a fresh clone, CI runner,
+    or reviewer always has something to load.
+    """
+
+    override = os.environ.get("RLE_ANALYSIS_DATA_DIR")
+    if override:
+        return Path(override), "production"
+    if (DEFAULT_ANALYSIS_DIR / "candidate_scores.csv").exists():
+        return DEFAULT_ANALYSIS_DIR, "production"
+    return DEMO_ANALYSIS_DIR, "demo"
 
 
 def _convert(value: str) -> Any:
@@ -56,7 +74,11 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 class DataService:
     def __init__(self, analysis_dir: Path | None = None, raw_dir: Path | None = None) -> None:
-        self.analysis_dir = analysis_dir or Path(os.environ.get("RLE_ANALYSIS_DATA_DIR", DEFAULT_ANALYSIS_DIR))
+        if analysis_dir is not None:
+            self.analysis_dir = analysis_dir
+            self.data_mode = "demo" if analysis_dir == DEMO_ANALYSIS_DIR else "production"
+        else:
+            self.analysis_dir, self.data_mode = _resolve_analysis_dir()
         self.raw_dir = raw_dir or Path(os.environ.get("RLE_RAW_DATA_DIR", DEFAULT_RAW_DIR))
         self.candidates = _read_csv(self.analysis_dir / "candidate_scores.csv", {"catchment_code"})
         self.selected = _read_csv(self.analysis_dir / "selected_locations.csv", {"catchment_code"})
@@ -233,6 +255,7 @@ class DataService:
             "analysis_name": self.metadata["analysis_name"],
             "method_version": self.metadata["method_version"],
             "boundary_system": self.metadata["boundary_system"],
+            "data_mode": self.data_mode,
             "source_directory": str(self.analysis_dir),
             "sources": self.metadata["sources"],
             "limitations": self.metadata["limitations"],

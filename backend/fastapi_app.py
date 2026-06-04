@@ -7,21 +7,48 @@ import io
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, Response
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict
 
-from .data_service import APP_ROOT, DataService
+from .data_service import APP_ROOT
+from .service import APP_VERSION, ServiceUnavailableError, get_service
+from .service import health as service_health
 
 
 FRONTEND = APP_ROOT / "frontend"
-SERVICE = DataService()
 app = FastAPI(
     title="Representative Location Explorer",
     description="Transparent representative-location selection for building-stock simulation.",
-    version="1.0.0",
+    version=APP_VERSION,
 )
+
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+        "connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; "
+        "form-action 'self'; frame-ancestors 'none'"
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+    return response
+
+
+@app.exception_handler(ServiceUnavailableError)
+async def service_unavailable_handler(request: Request, exc: ServiceUnavailableError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"error": str(exc)})
 
 
 class ScenarioPayload(BaseModel):
@@ -44,18 +71,18 @@ class ScenarioPayload(BaseModel):
 
 
 @app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok", "service": "Representative Location Explorer"}
+def health() -> dict[str, Any]:
+    return service_health()
 
 
 @app.get("/api/dashboard")
 def dashboard() -> dict[str, Any]:
-    return SERVICE.dashboard()
+    return get_service().dashboard()
 
 
 @app.get("/api/provenance")
 def provenance() -> dict[str, Any]:
-    return SERVICE.provenance()
+    return get_service().provenance()
 
 
 @app.get("/api/candidates")
@@ -66,7 +93,7 @@ def candidates(
     selected_only: bool = False,
     limit: int = Query(250, ge=1, le=3000),
 ) -> dict[str, Any]:
-    return SERVICE.candidates_page(
+    return get_service().candidates_page(
         {
             "search": search,
             "climate": climate,
@@ -80,7 +107,7 @@ def candidates(
 @app.get("/api/zip/{zip_code}")
 def zip_lookup(zip_code: str) -> dict[str, Any]:
     try:
-        return SERVICE.zip_lookup(zip_code)
+        return get_service().zip_lookup(zip_code)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
@@ -90,7 +117,7 @@ def zip_lookup(zip_code: str) -> dict[str, Any]:
 @app.post("/api/scenarios/evaluate")
 def evaluate(payload: ScenarioPayload) -> dict[str, Any]:
     try:
-        return SERVICE.evaluate(payload.scenario_dict())
+        return get_service().evaluate(payload.scenario_dict())
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

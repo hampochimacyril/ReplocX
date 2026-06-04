@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from copy import deepcopy
+from statistics import median
 from typing import Any, Iterable
 
 from .models import ScenarioConfig
@@ -264,6 +265,20 @@ def evaluate(candidates: list[dict[str, Any]], config: ScenarioConfig) -> dict[s
         for row in scenario
         if independent_keys[_stratum(row)] != row["location_uniqueness_key"]
     ]
+    scenario_scores = [float(row["scenario_score"]) for row in scenario]
+    scenario_distances = [float(row["station_distance_miles"]) for row in scenario]
+    scenario_ranks = [int(row["scenario_rank"]) for row in scenario if row.get("scenario_rank")]
+    combined_score = round(sum(scenario_scores), 6)
+    independent_combined_score = round(sum(float(row["scenario_score"]) for row in independent), 6)
+    # Coverage efficiency expresses how much total composite score the distinct
+    # coverage rules retain relative to the unconstrained per-stratum tops
+    # (1.0 = no representativeness cost). It is descriptive only and does not
+    # influence selection.
+    coverage_efficiency = (
+        round(combined_score / independent_combined_score, 6)
+        if independent_combined_score
+        else None
+    )
     return {
         "config": config.to_dict(),
         "independent": independent,
@@ -275,15 +290,22 @@ def evaluate(candidates: list[dict[str, Any]], config: ScenarioConfig) -> dict[s
             "represented_location_count": len({row["location_uniqueness_key"] for row in scenario}),
             "independent_location_count": len({row["location_uniqueness_key"] for row in independent}),
             "distinct_location_count": len({row["location_uniqueness_key"] for row in distinct}),
-            "combined_score": round(sum(float(row["scenario_score"]) for row in scenario), 6),
-            "independent_combined_score": round(sum(float(row["scenario_score"]) for row in independent), 6),
-            "score_difference": round(
-                sum(float(row["scenario_score"]) for row in scenario)
-                - sum(float(row["scenario_score"]) for row in independent),
-                6,
-            ),
+            "combined_score": combined_score,
+            "independent_combined_score": independent_combined_score,
+            "score_difference": round(combined_score - independent_combined_score, 6),
             "changed_assignment_count": len(changes),
             "eligible_candidate_count": sum(row["scenario_eligible"] for row in rows),
+            # Additive descriptive diagnostics (do not affect selection).
+            "coverage_efficiency": coverage_efficiency,
+            "min_scenario_score": round(min(scenario_scores), 6) if scenario_scores else None,
+            "median_scenario_score": round(median(scenario_scores), 6) if scenario_scores else None,
+            "mean_station_distance_miles": (
+                round(sum(scenario_distances) / len(scenario_distances), 3) if scenario_distances else None
+            ),
+            "max_station_distance_miles": round(max(scenario_distances), 3) if scenario_distances else None,
+            "mean_unconstrained_rank": (
+                round(sum(scenario_ranks) / len(scenario_ranks), 3) if scenario_ranks else None
+            ),
         },
     }
 

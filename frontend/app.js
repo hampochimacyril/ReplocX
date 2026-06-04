@@ -68,21 +68,37 @@ function setHeader(page) {
   const meta = pages.find(([id]) => id === page);
   $("#page-title").textContent = meta[1];
   $("#page-kicker").textContent = meta[3];
+  document.title = `${meta[1]} · Representative Location Explorer`;
+}
+
+function closeSidebar() {
+  document.querySelector(".sidebar").classList.remove("open");
+  const backdrop = $("#sidebar-backdrop");
+  if (backdrop) backdrop.hidden = true;
+  const menu = $("#mobile-menu");
+  if (menu) menu.setAttribute("aria-expanded", "false");
+}
+
+function openSidebar() {
+  document.querySelector(".sidebar").classList.add("open");
+  const backdrop = $("#sidebar-backdrop");
+  if (backdrop) backdrop.hidden = false;
+  $("#mobile-menu").setAttribute("aria-expanded", "true");
 }
 
 function renderNav() {
   $("#primary-nav").innerHTML = pages
     .map(
       ([id, label, icon]) => `
-        <button class="nav-item ${id === app.page ? "active" : ""}" data-page="${id}">
-          <span class="nav-icon">${icon}</span><span>${label}</span>
+        <button class="nav-item ${id === app.page ? "active" : ""}" data-page="${id}"${id === app.page ? ' aria-current="page"' : ""}>
+          <span class="nav-icon" aria-hidden="true">${icon}</span><span>${label}</span>
         </button>`,
     )
     .join("");
   document.querySelectorAll(".nav-item").forEach((button) =>
     button.addEventListener("click", () => {
       app.page = button.dataset.page;
-      document.querySelector(".sidebar").classList.remove("open");
+      closeSidebar();
       setHeader(app.page);
       renderNav();
       render();
@@ -326,7 +342,7 @@ function scenarioBuilder() {
     <section class="grid two">
       <div class="stack">
         <article class="card">
-          <div class="card-header"><div><h4>Screening and score formula</h4><p class="card-subtitle">Weights must sum to 100%. Live results refresh after changes.</p></div><span id="weight-badge">${badge("100% allocated", "teal")}</span></div>
+          <div class="card-header"><div><h4>Screening and score formula</h4><p class="card-subtitle">Weights must sum to 100%. Live results refresh after changes.</p></div><div style="display:flex;gap:8px;align-items:center"><button type="button" class="normalize-button" id="normalize-weights" hidden>Normalize to 100%</button><span id="weight-badge">${badge("100% allocated", "teal")}</span></div></div>
           <div class="form-grid">
             <div class="form-group"><label>Density-screen percentile <output id="density-output">${pct(config.density_screen_percentile)}</output></label><input id="density" type="range" min="0" max="0.95" step="0.05" value="${config.density_screen_percentile}"></div>
             <div class="form-group"><label>Maximum station distance <output id="distance-output">${num(config.max_station_distance_miles)} mi</output></label><input id="max-distance" type="range" min="25" max="500" step="25" value="${config.max_station_distance_miles}"></div>
@@ -335,6 +351,7 @@ function scenarioBuilder() {
             <div class="form-group"><label>Population coverage <output id="population-output">${pct(config.weights.population_coverage_percentile)}</output></label><input id="population" type="range" min="0" max="1" step="0.05" value="${config.weights.population_coverage_percentile}"></div>
             <div class="form-group"><label>Station-distance penalty <output id="penalty-output">${pct(config.station_distance_penalty)}</output></label><input id="penalty" type="range" min="0" max="0.25" step="0.01" value="${config.station_distance_penalty}"></div>
           </div>
+          <div class="weight-warning" id="weight-warning" role="status" hidden></div>
         </article>
         <article class="card">
           <div class="card-header"><div><h4>Allocation and weather rules</h4><p class="card-subtitle">Weather eligibility is deliberately separate from catchment scoring.</p></div></div>
@@ -386,22 +403,45 @@ function scenarioPayload() {
   };
 }
 
+function refreshWeightState() {
+  $("#density-output").textContent = pct($("#density").value);
+  $("#distance-output").textContent = `${num($("#max-distance").value)} mi`;
+  $("#housing-output").textContent = pct($("#housing").value);
+  $("#population-density-output").textContent = pct($("#population-density").value);
+  $("#population-output").textContent = pct($("#population").value);
+  $("#penalty-output").textContent = pct($("#penalty").value);
+  const total = Number($("#housing").value) + Number($("#population-density").value) + Number($("#population").value);
+  const balanced = Math.abs(total - 1) < 0.001;
+  $("#weight-badge").innerHTML = balanced ? badge("100% allocated", "teal") : badge(`${pct(total)} allocated`, "coral");
+  const normalize = $("#normalize-weights");
+  const warning = $("#weight-warning");
+  if (normalize) normalize.hidden = balanced;
+  if (warning) {
+    warning.hidden = balanced;
+    warning.textContent = balanced ? "" : "Score weights must total 100% before the scenario can be evaluated. Use “Normalize to 100%”, or adjust the three weight sliders.";
+  }
+  return balanced;
+}
+
 function bindScenarioEvents() {
   let timer;
   document.querySelectorAll("#density,#max-distance,#housing,#population-density,#population,#penalty,#unique,#qc,#override-enabled,#override-code").forEach((input) =>
     input.addEventListener("input", () => {
-      $("#density-output").textContent = pct($("#density").value);
-      $("#distance-output").textContent = `${num($("#max-distance").value)} mi`;
-      $("#housing-output").textContent = pct($("#housing").value);
-      $("#population-density-output").textContent = pct($("#population-density").value);
-      $("#population-output").textContent = pct($("#population").value);
-      $("#penalty-output").textContent = pct($("#penalty").value);
-      const total = Number($("#housing").value) + Number($("#population-density").value) + Number($("#population").value);
-      $("#weight-badge").innerHTML = Math.abs(total - 1) < 0.001 ? badge("100% allocated", "teal") : badge(`${pct(total)} allocated`, "coral");
+      const balanced = refreshWeightState();
       clearTimeout(timer);
-      timer = setTimeout(evaluateScenario, 300);
+      if (balanced) timer = setTimeout(evaluateScenario, 300);
     }),
   );
+  $("#normalize-weights")?.addEventListener("click", () => {
+    const ids = ["#housing", "#population-density", "#population"];
+    const total = ids.reduce((sum, id) => sum + Number($(id).value), 0);
+    if (total <= 0) {
+      ids.forEach((id) => ($(id).value = 1 / 3));
+    } else {
+      ids.forEach((id) => ($(id).value = Number($(id).value) / total));
+    }
+    if (refreshWeightState()) evaluateScenario();
+  });
 }
 
 async function evaluateScenario() {
@@ -439,6 +479,19 @@ function renderScenarioLive(result) {
     </article>`;
 }
 
+function sortableTh(label, key) {
+  const [column, direction] = app.tableSort;
+  const ariaSort = column === key ? (direction === "asc" ? "ascending" : "descending") : "none";
+  return `<th scope="col" data-sort="${key}" role="columnheader" aria-sort="${ariaSort}" tabindex="0" title="Sort by ${esc(label)}">${esc(label)}<span class="sort-caret" aria-hidden="true"></span></th>`;
+}
+
+function applySortIndicators() {
+  const [column, direction] = app.tableSort;
+  document.querySelectorAll("th[data-sort]").forEach((header) =>
+    header.setAttribute("aria-sort", header.dataset.sort === column ? (direction === "asc" ? "ascending" : "descending") : "none"),
+  );
+}
+
 async function loadCandidates() {
   workspace.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Loading candidate table…</p></div>`;
   app.candidates = await api("/api/candidates?limit=3000");
@@ -459,7 +512,7 @@ function candidateRanking() {
         <span>${badge(`${num(rows.length)} candidates`, "teal")}</span>
       </div>
       <div class="table-wrap"><table><thead><tr>
-        <th>Compare</th><th data-sort="climate_region">Climate</th><th data-sort="urbanicity_short">Urbanicity</th><th data-sort="catchment_label">Candidate catchment</th><th>Boundary</th><th data-sort="population_2010">Population</th><th data-sort="housing_units_2010">Housing units</th><th data-sort="population_density_sqmi">Pop. density</th><th data-sort="housing_unit_density_sqmi">HU density</th><th data-sort="location_score">Score</th><th data-sort="selection_rank">Rank</th><th>Selected</th><th>Weather station</th><th data-sort="station_distance_miles">Station mi</th><th>NREL filter</th><th>Verified</th>
+        <th scope="col">Compare</th>${sortableTh("Climate", "climate_region")}${sortableTh("Urbanicity", "urbanicity_short")}${sortableTh("Candidate catchment", "catchment_label")}<th scope="col">Boundary</th>${sortableTh("Population", "population_2010")}${sortableTh("Housing units", "housing_units_2010")}${sortableTh("Pop. density", "population_density_sqmi")}${sortableTh("HU density", "housing_unit_density_sqmi")}${sortableTh("Score", "location_score")}${sortableTh("Rank", "selection_rank")}<th scope="col">Selected</th><th scope="col">Weather station</th>${sortableTh("Station mi", "station_distance_miles")}<th scope="col">NREL filter</th><th scope="col">Verified</th>
       </tr></thead><tbody id="ranking-body">${rankingRows(rows.slice(0, 700))}</tbody></table></div>
       <p class="card-subtitle" id="ranking-note">Showing ${num(Math.min(rows.length, 700))} of ${num(rows.length)} locally loaded candidates.</p>
     </section>
@@ -474,7 +527,7 @@ function rankingRows(rows) {
   return rows
     .map(
       (row) => `<tr class="${row.baseline_selected ? "selected-row" : ""}">
-      <td><input type="checkbox" data-compare="${esc(row.location_uniqueness_key)}|${esc(row.climate_region)}|${esc(row.urbanicity)}" ${app.compare.some(item => item.location_uniqueness_key === row.location_uniqueness_key && item.climate_region === row.climate_region && item.urbanicity === row.urbanicity) ? "checked" : ""}></td>
+      <td><input type="checkbox" aria-label="Compare ${esc(row.catchment_label)}" data-compare="${esc(row.location_uniqueness_key)}|${esc(row.climate_region)}|${esc(row.urbanicity)}" ${app.compare.some(item => item.location_uniqueness_key === row.location_uniqueness_key && item.climate_region === row.climate_region && item.urbanicity === row.urbanicity) ? "checked" : ""}></td>
       <td>${esc(row.climate_region)}</td><td>${badge(row.urbanicity_short)}</td><td title="${esc(row.catchment_label)}">${esc(row.catchment_label)}</td><td>${esc(row.catchment_type)} ${esc(row.catchment_code)}</td>
       <td>${num(row.population_2010)}</td><td>${num(row.housing_units_2010)}</td><td>${num(row.population_density_sqmi, 1)}</td><td>${num(row.housing_unit_density_sqmi, 1)}</td><td>${score(row.location_score)}</td><td>${row.selection_rank || "—"}</td>
       <td>${row.baseline_selected ? badge("Selected", "teal") : "—"}</td><td title="${esc(row.selected_station_name)}">${esc(row.selected_station_name)}</td><td>${num(row.station_distance_miles, 1)}</td><td title="${esc(row.nrel_filter_value || "Mapping required")}">${esc(row.nrel_filter_field)}</td><td>${row.nrel_value_verified ? badge("Verified", "teal") : badge("Review", "gold")}</td>
@@ -513,18 +566,26 @@ function refreshRankingBody() {
   $("#ranking-body").innerHTML = rankingRows(rows.slice(0, 700));
   $("#ranking-note").textContent = `Showing ${num(Math.min(rows.length, 700))} of ${num(rows.length)} filtered candidates.`;
   $("#scatter").innerHTML = scatter(rows.slice(0, 700));
+  applySortIndicators();
   bindCompareInputs();
+}
+
+function sortByColumn(column) {
+  app.tableSort = [column, app.tableSort[0] === column && app.tableSort[1] === "desc" ? "asc" : "desc"];
+  refreshRankingBody();
 }
 
 function bindRankingEvents() {
   ["#rank-search", "#rank-climate", "#rank-urbanicity", "#rank-selected"].forEach((selector) => $(selector).addEventListener("input", refreshRankingBody));
-  document.querySelectorAll("[data-sort]").forEach((header) =>
-    header.addEventListener("click", () => {
-      const column = header.dataset.sort;
-      app.tableSort = [column, app.tableSort[0] === column && app.tableSort[1] === "desc" ? "asc" : "desc"];
-      refreshRankingBody();
-    }),
-  );
+  document.querySelectorAll("[data-sort]").forEach((header) => {
+    header.addEventListener("click", () => sortByColumn(header.dataset.sort));
+    header.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        sortByColumn(header.dataset.sort);
+      }
+    });
+  });
   $("#export-ranking").addEventListener("click", () => downloadCsv("candidate-ranking.csv", filteredCandidates()));
   bindCompareInputs();
 }
@@ -572,6 +633,9 @@ function allocationComparison() {
         <div class="metric" style="margin-top:10px"><span>Distinct-location allocation</span><strong>${s.distinct_location_count} locations</strong></div>
         <div class="metric"><span>Scenario combined score</span><strong>${num(s.combined_score, 3)}</strong></div>
         <div class="metric"><span>Score difference vs independent tops</span><strong>${num(s.score_difference, 3)}</strong></div>
+        <div class="metric" title="Share of the unconstrained per-stratum composite score retained after distinct-coverage rules. 100% means representation is free of score cost."><span>Coverage efficiency</span><strong>${s.coverage_efficiency != null ? pct(s.coverage_efficiency, 1) : "—"}</strong></div>
+        <div class="metric"><span>Median selected score</span><strong>${s.median_scenario_score != null ? score(s.median_scenario_score) : "—"}</strong></div>
+        <div class="metric"><span>Mean station distance</span><strong>${s.mean_station_distance_miles != null ? `${num(s.mean_station_distance_miles, 1)} mi` : "—"}</strong></div>
       </article>
       <article class="card"><div class="card-header"><div><h4>Assignment substitutions</h4><p class="card-subtitle">Slope-style trace from independent candidates to active scenario assignments.</p></div></div>${slopeChart(result)}</article>
     </section>
@@ -643,19 +707,36 @@ function render() {
 async function start() {
   renderNav();
   setHeader(app.page);
-  $("#mobile-menu").addEventListener("click", () => document.querySelector(".sidebar").classList.toggle("open"));
+  $("#mobile-menu").addEventListener("click", () =>
+    document.querySelector(".sidebar").classList.contains("open") ? closeSidebar() : openSidebar(),
+  );
+  $("#sidebar-backdrop")?.addEventListener("click", closeSidebar);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeSidebar();
+  });
   $("#refresh-view").addEventListener("click", async () => {
-    app.dashboard = await api("/api/dashboard");
-    app.scenario = null;
-    setScenarioPill();
-    render();
-    toast("Read-only analytical inputs refreshed.");
+    try {
+      app.dashboard = await api("/api/dashboard");
+      app.scenario = null;
+      setScenarioPill();
+      render();
+      toast("Read-only analytical inputs refreshed.");
+    } catch (error) {
+      toast(error.message);
+    }
   });
   try {
     app.dashboard = await api("/api/dashboard");
+    if (app.dashboard?.provenance?.data_mode === "demo") {
+      const status = $("#data-status");
+      if (status) status.innerHTML = `<span style="background:#c99a38;box-shadow:0 0 0 3px rgba(201,154,56,.18)"></span> Demonstration dataset`;
+      setScenarioPill("Baseline scenario · demo data");
+    }
     render();
   } catch (error) {
-    workspace.innerHTML = `<div class="info-banner coral"><strong>Application could not load.</strong><span>${esc(error.message)}</span></div>`;
+    workspace.innerHTML = `<div class="info-banner coral"><strong>Application could not load.</strong><span>${esc(error.message)} The analytical inputs may be unavailable — check the server log and <code>/api/health</code>.</span></div>`;
+    const status = $("#data-status");
+    if (status) status.innerHTML = `<span style="background:#d98b6a;box-shadow:0 0 0 3px rgba(217,139,106,.18)"></span> Inputs unavailable`;
   }
 }
 

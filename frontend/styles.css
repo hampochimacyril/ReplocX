@@ -196,3 +196,49 @@ tr:hover td { background: #f6fbfa; }
   .details-grid { grid-template-columns: 1fr; }
 }
 
+/* --- v1.1 polish: accessibility, sortable headers, mobile, print --- */
+
+/* Darker mid-slate improves contrast of small secondary text on light surfaces. */
+:root { --slate-500: #6c7f8c; }
+
+/* Visible keyboard focus across all interactive surfaces. */
+:where(a, button, input, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--teal-600);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.nav-item:focus-visible { outline-offset: -2px; }
+
+/* Sortable table headers: affordance + active-sort indication. */
+th[data-sort] { cursor: pointer; user-select: none; }
+th[data-sort]:hover { color: var(--navy-900); background: #eef4f4; }
+th[data-sort] .sort-caret { margin-left: 4px; color: var(--slate-500); font-size: 9px; }
+th[aria-sort="ascending"], th[aria-sort="descending"] { color: var(--teal-700); }
+th[aria-sort="ascending"] .sort-caret::after { content: "\25B2"; color: var(--teal-600); }
+th[aria-sort="descending"] .sort-caret::after { content: "\25BC"; color: var(--teal-600); }
+th[aria-sort="none"] .sort-caret::after { content: "\2195"; opacity: .45; }
+
+/* Inline weight-normalization affordance in the scenario builder. */
+.normalize-button { padding: 5px 9px; border: 1px solid var(--gold-500); border-radius: 6px; color: #664a12; background: var(--gold-100); font-size: 11px; font-weight: 800; }
+.weight-warning { margin: 10px 0 0; padding: 9px 11px; border-left: 3px solid var(--coral-700); border-radius: 0 6px 6px 0; background: var(--coral-100); color: #8d3a30; font-size: 11px; line-height: 1.5; }
+
+/* Mobile navigation backdrop. */
+.sidebar-backdrop { position: fixed; inset: 0; z-index: 9; background: rgba(7, 24, 39, .42); border: 0; }
+.sidebar-backdrop[hidden] { display: none; }
+@media (min-width: 781px) { .sidebar-backdrop { display: none; } }
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+
+/* Print: produce a clean methodology/report handout without app chrome. */
+@media print {
+  .sidebar, .topbar, .sidebar-backdrop, .actions, .layer-toggles, .table-toolbar, #toast { display: none !important; }
+  .app-shell { display: block; }
+  #workspace { max-width: none; padding: 0; }
+  .card, .kpi { box-shadow: none; border: 1px solid #c9d4d7; break-inside: avoid; }
+  a { color: var(--navy-900); text-decoration: underline; }
+  body { background: #fff; }
+}
+

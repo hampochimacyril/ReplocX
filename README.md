@@ -1,5 +1,7 @@
 # Representative Location Explorer
 
+[![CI](https://github.com/hampochimacyril/Location-representation-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/hampochimacyril/Location-representation-explorer/actions/workflows/ci.yml)
+
 Representative Location Explorer is a private research decision-support application for
 selecting and comparing representative U.S. locations for national building-stock and
 heat-health simulations. It wraps the existing location-selection analysis as read-only
@@ -16,11 +18,13 @@ ZCTAs, counties, CBSAs, places, and weather stations as interchangeable.
 - ZIP-code explorer with ZCTA, county, CBSA, uncertainty, and filter-scope context
 - Configurable density screen, score weights, uniqueness rule, station-distance rules,
   weather-QC eligibility, and editable research-priority override
-- Candidate ranking table with filters, sorting, CSV export, comparison, and scatter plot
-- Allocation comparison with score differences and substitution reasons
+- Candidate ranking table with filters, keyboard-operable sorting, CSV export, comparison, and scatter plot
+- Allocation comparison with score differences, substitution reasons, and coverage-efficiency diagnostics
 - Exact baseline ResStock filter fields and enumeration-verified values
 - Versioned scenario JSON and site-list CSV exports
 - Read-only ingestion manifest with SHA-256 fingerprints
+- Fault-tolerant startup with a `/api/health` readiness probe and same-origin security headers
+- Accessible UI: keyboard navigation, visible focus, `aria-sort`, reduced-motion support, and a print stylesheet
 
 ## Screenshots
 
@@ -67,6 +71,22 @@ The bundled `data/zip_crosswalk_demo.csv` is a small demonstration subset with a
 HUD-USPS-compatible schema. Replace it with a documented quarterly crosswalk ingestion
 before using ZIP search nationally.
 
+### Demonstration dataset (offline / CI / reviewers)
+
+When the real processed outputs above are not present, the service automatically
+falls back to a bundled **synthetic** dataset in `data/demo/` so the app and the
+full test suite run on any clone with no external inputs. The data mode is shown
+in `/api/health` (`"data_mode": "demo"`), in the methodology sources, and as a
+"Demonstration dataset" indicator in the UI. Regenerate it deterministically with:
+
+```bash
+python3 scripts/generate_demo_data.py
+```
+
+Resolution order: an explicit `RLE_ANALYSIS_DATA_DIR` override (used verbatim) →
+the real processed outputs if present → the bundled demo dataset. The demo numbers
+are illustrative only and must never substitute for the real analytical outputs.
+
 ## Run Locally
 
 From this application folder:
@@ -86,6 +106,21 @@ pip install -r backend/requirements.txt
 uvicorn backend.fastapi_app:app --reload --port 8787
 ```
 
+### Health and graceful degradation
+
+Inputs are loaded lazily, so the server starts even when the read-only analysis
+directory is not yet mounted. Check readiness at any time:
+
+```bash
+curl http://127.0.0.1:8787/api/health
+```
+
+A ready instance reports `"data_ready": true` with candidate counts; otherwise it
+reports `"status": "degraded"` and API calls return `503` with remediation
+guidance instead of crashing. Override the input location with the
+`RLE_ANALYSIS_DATA_DIR` environment variable when needed. Both entry points send
+a strict same-origin Content-Security-Policy and standard hardening headers.
+
 ## Refresh Read-Only Inputs
 
 After regenerating the analytical outputs:
@@ -100,18 +135,25 @@ because it contains a local absolute path.
 
 ## Test
 
+The suite is self-contained: with no real inputs present it runs against the
+bundled demonstration dataset, so a fresh clone passes immediately.
+
 ```bash
 python3 -m unittest discover -s tests -v
 node --check frontend/app.js
 python3 -m py_compile backend/*.py scripts/*.py tests/*.py
 ```
 
-In a Node environment with `npm` available:
+In a Node environment with `npm` available (Playwright launches the server itself):
 
 ```bash
 npm install
 npm run test:e2e
 ```
+
+Continuous integration runs all of the above on every push and pull request via
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Python 3.11/3.12 backend
+tests, a graceful-degradation smoke test, frontend syntax, and Playwright e2e).
 
 The regression suite checks:
 
@@ -124,9 +166,30 @@ The regression suite checks:
 - leading-zero identifier preservation
 - transparent ZIP-resolution errors
 
+## Deploy a public demo (Render)
+
+The bundled [`render.yaml`](render.yaml) blueprint deploys a **public, demo-data**
+instance — safe to share because it never serves the private analytical outputs.
+
+1. Push the repository to GitHub.
+2. In Render: **New → Blueprint**, connect this repo, and accept the detected
+   `render.yaml`. Render builds, runs `scripts/generate_demo_data.py`, and starts
+   `uvicorn backend.fastapi_app:app` on its `$PORT`.
+3. After ~3–5 minutes you get a public URL like
+   `https://representative-location-explorer.onrender.com`. Confirm readiness at
+   `/api/health` (`"data_mode": "demo"`).
+
+A `Procfile` is included for Heroku/Railway-style platforms, and the `Dockerfile`
+honors `$PORT` for any container host. To serve **real** data instead, deploy to a
+private/authenticated host and set `RLE_ANALYSIS_DATA_DIR` to a read-only mount.
+
 ## Docker
 
 ```bash
+# Demo data (no mount needed):
+docker build -t rle . && docker run -p 8787:8787 rle
+
+# Real data, mounted read-only:
 docker compose up --build
 ```
 
