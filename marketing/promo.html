@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Representative Location Explorer — Promo</title>
+<style>
+  :root{
+    --navy-950:#071827; --navy-900:#0b2235; --navy-800:#12334a;
+    --teal-600:#0a9690; --teal-400:#5fcabf; --gold-500:#c99a38; --coral:#b7594d;
+    --blue:#3977a8; --purple:#786ba8; --paper:#f7f9f8; --ink:#eaf3f3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#02080d; color:var(--ink);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    display:grid; place-items:center; overflow:hidden;
+  }
+  /* 16:9 letterboxed stage */
+  .stage{
+    position:relative; width:min(100vw,177.78vh); aspect-ratio:16/9;
+    background:radial-gradient(120% 140% at 78% 12%, #0e3242 0%, #0a2333 38%, #061620 72%, #03101a 100%);
+    overflow:hidden; box-shadow:0 30px 120px rgba(0,0,0,.6);
+    perspective:1400px;
+  }
+  /* drifting aurora + grain */
+  .aura{position:absolute; inset:-20%; background:
+      radial-gradient(40% 40% at 20% 30%, rgba(10,150,144,.22), transparent 70%),
+      radial-gradient(36% 36% at 82% 70%, rgba(120,107,168,.18), transparent 70%),
+      radial-gradient(30% 30% at 60% 18%, rgba(201,154,56,.14), transparent 70%);
+    filter:blur(8px); animation:drift 22s ease-in-out infinite alternate;}
+  @keyframes drift{from{transform:translate3d(-2%,-1%,0) scale(1.02)}to{transform:translate3d(3%,2%,0) scale(1.08)}}
+  .grid-lines{position:absolute; inset:0; background-image:
+     linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+     linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+     background-size:54px 54px; mask-image:radial-gradient(120% 90% at 50% 40%,#000 55%,transparent 100%);}
+  .particles{position:absolute; inset:0; pointer-events:none}
+  .particles i{position:absolute; width:4px;height:4px;border-radius:50%;
+     background:radial-gradient(circle,#aee6df,rgba(174,230,223,0)); opacity:.5;
+     animation:float linear infinite}
+  @keyframes float{0%{transform:translateY(20px);opacity:0}10%{opacity:.6}100%{transform:translateY(-120px);opacity:0}}
+
+  /* scene system */
+  .scene{position:absolute; inset:0; display:grid; place-items:center; text-align:center;
+     opacity:0; transform:translateY(22px) scale(.99); transition:opacity .7s ease, transform .9s cubic-bezier(.2,.7,.2,1);
+     padding:6%}
+  .scene.active{opacity:1; transform:none}
+  .kicker{font-size:1.05vw; letter-spacing:.42em; text-transform:uppercase; color:var(--teal-400); font-weight:800; opacity:.9}
+  h1{font-family:Georgia,"Times New Roman",serif; font-weight:500; letter-spacing:-.01em; line-height:1.02;
+     font-size:5.4vw; color:#fff; text-shadow:0 2px 40px rgba(10,150,144,.25)}
+  h2{font-family:Georgia,serif; font-weight:500; font-size:3.4vw; color:#fff; line-height:1.08}
+  .sub{margin-top:1.4vw; font-size:1.5vw; color:#bcd6da; max-width:62ch}
+  .scene .reveal{opacity:0; transform:translateY(16px); animation:rise .9s forwards}
+  .scene.active .reveal{animation-delay:var(--d,.15s)}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* 3D MAP (scene 1 + ambient) */
+  .mapwrap{position:absolute; inset:0; display:grid; place-items:center; transform-style:preserve-3d;
+     animation:tilt 14s ease-in-out infinite alternate}
+  @keyframes tilt{from{transform:rotateX(16deg) rotateZ(-1deg) translateY(2%)}to{transform:rotateX(22deg) rotateZ(1.5deg) translateY(-2%)}}
+  .mapwrap svg{width:64%; height:auto; overflow:visible; filter:drop-shadow(0 30px 40px rgba(0,0,0,.55))}
+  .us-base{fill:#0f2f3f; stroke:#1d5566; stroke-width:1.4}
+  .us-glow{fill:none; stroke:var(--teal-400); stroke-width:1.6; opacity:.5; filter:drop-shadow(0 0 6px rgba(95,202,191,.7))}
+  .dot{transform-box:fill-box; transform-origin:center; animation:pop .6s backwards}
+  @keyframes pop{from{opacity:0; transform:scale(0)}to{opacity:1; transform:scale(1)}}
+  .ring{fill:none; stroke-width:1.4; opacity:.0; animation:ring 3.4s ease-out infinite}
+  @keyframes ring{0%{opacity:.7; r:3}70%{opacity:0; r:22}100%{opacity:0}}
+
+  /* strata grid (scene 3) */
+  .matrix{display:grid; grid-template-columns:repeat(4,1fr); gap:.7vw; width:46vw}
+  .cell{height:3.0vw; border-radius:.5vw; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+     opacity:0; transform:scale(.6); animation:cellin .5s forwards}
+  @keyframes cellin{to{opacity:1;transform:none}}
+  .legend{display:flex; gap:1.4vw; justify-content:center; margin-top:1.6vw; font-size:1.05vw; color:#cfe2e4}
+  .legend span{display:inline-flex; align-items:center; gap:.5vw}
+  .swatch{width:.9vw;height:.9vw;border-radius:50%}
+
+  /* zip card (scene 4) */
+  .card{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:1vw; padding:2.2vw 2.6vw;
+     backdrop-filter:blur(8px); box-shadow:0 24px 60px rgba(0,0,0,.4)}
+  .zipbig{font-family:Georgia,serif; font-size:4.6vw; letter-spacing:.18em; color:#fff}
+  .chips{display:flex; gap:.7vw; justify-content:center; margin-top:1.4vw; flex-wrap:wrap}
+  .chip{padding:.6vw 1vw; border-radius:2vw; font-size:1.05vw; font-weight:700; background:rgba(10,150,144,.18);
+     border:1px solid rgba(95,202,191,.4); color:#d7f2ee; opacity:0; transform:translateY(10px); animation:rise .6s forwards}
+  .chip.gold{background:rgba(201,154,56,.16); border-color:rgba(201,154,56,.5); color:#f3dca6}
+
+  /* sliders + KPI (scene 5) */
+  .panel{display:grid; gap:1.1vw; width:42vw}
+  .slider{display:grid; grid-template-columns:13vw 1fr; align-items:center; gap:1vw; font-size:1.05vw; color:#cfe2e4}
+  .track{height:.7vw; border-radius:1vw; background:rgba(255,255,255,.1); overflow:hidden}
+  .fill{height:100%; width:0; border-radius:1vw; background:linear-gradient(90deg,var(--teal-600),var(--teal-400))}
+  .scene.active .fill{animation:grow 1.4s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes grow{to{width:var(--w,60%)}}
+
+  /* big KPI (scene 6) */
+  .kpi{font-family:Georgia,serif; font-size:8vw; color:#fff; line-height:1}
+  .kpi small{display:block; font-family:Inter,sans-serif; font-size:1.3vw; letter-spacing:.2em; text-transform:uppercase; color:var(--teal-400); margin-top:1vw; font-weight:800}
+  .scatter{position:absolute; inset:auto 6% 8% auto; width:26vw; height:14vw; opacity:.55}
+
+  /* trust badges (scene 7) */
+  .badges{display:flex; gap:1.6vw}
+  .badge{display:grid; gap:.6vw; place-items:center; padding:1.8vw 2vw; border-radius:1vw;
+     background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); min-width:13vw}
+  .badge .tick{width:3vw;height:3vw;border-radius:50%;display:grid;place-items:center;
+     background:rgba(10,150,144,.2); border:1px solid var(--teal-400); color:var(--teal-400); font-size:1.6vw}
+  .badge b{font-size:1.5vw;color:#fff;font-weight:700}
+  .badge i{font-style:normal;font-size:.95vw;color:#9fc0c4}
+
+  /* CTA (scene 8) */
+  .brandmark{width:5vw;height:5vw;border:2px solid var(--teal-400);border-radius:1.2vw;display:grid;place-items:center;
+     margin:0 auto 1.6vw; box-shadow:0 0 40px rgba(95,202,191,.4)}
+  .url{margin-top:1.8vw; display:inline-block; padding:.8vw 1.6vw; border-radius:2vw; font-size:1.3vw; font-weight:800;
+     color:#06231f; background:linear-gradient(90deg,var(--teal-400),#8fe0d7)}
+
+  /* progress + controls */
+  .progress{position:absolute; left:0; right:0; bottom:0; height:5px; background:rgba(255,255,255,.08)}
+  .progress > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--teal-600),var(--gold-500)); transition:width .3s linear}
+  .cc{position:absolute; left:0; right:0; bottom:5.5%; display:flex; justify-content:center; pointer-events:none}
+  .cc span{background:rgba(3,12,20,.62); color:#eaf6f5; font-size:1.4vw; padding:.5vw 1.1vw; border-radius:.6vw;
+     max-width:80%; line-height:1.3; backdrop-filter:blur(4px); opacity:0; transition:opacity .3s}
+  .cc.show span{opacity:1}
+  .controls{position:absolute; top:3%; right:3%; display:flex; gap:.6vw; z-index:5}
+  .controls button{border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#dff;
+     border-radius:.5vw; padding:.5vw .8vw; font-size:1vw; cursor:pointer}
+  .controls button:hover{background:rgba(255,255,255,.16)}
+
+  /* start overlay */
+  .overlay{position:absolute; inset:0; display:grid; place-items:center; z-index:10;
+     background:radial-gradient(120% 120% at 50% 40%, rgba(6,22,32,.55), rgba(2,8,13,.92))}
+  .overlay .panelc{text-align:center; max-width:60ch}
+  .play{margin-top:2vw; display:inline-flex; align-items:center; gap:1vw; cursor:pointer;
+     padding:1.1vw 2.2vw; border-radius:3vw; border:0; font-size:1.5vw; font-weight:800; color:#06231f;
+     background:linear-gradient(90deg,var(--teal-400),#8fe0d7); box-shadow:0 18px 50px rgba(10,150,144,.4)}
+  .play:hover{transform:translateY(-2px)}
+  .hint{margin-top:1.6vw; font-size:1vw; color:#9fc0c4}
+  .badge-soft{font-size:.95vw;color:var(--teal-400);letter-spacing:.3em;text-transform:uppercase;font-weight:800}
+  @media (max-width:760px){ .kicker,.controls button,.hint,.legend,.slider,.cc span{font-size:2.6vw} h1{font-size:9vw} h2{font-size:6vw} .sub{font-size:3vw} }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="aura"></div>
+  <div class="grid-lines"></div>
+  <div class="particles" id="particles"></div>
+
+  <!-- Scene 1 -->
+  <section class="scene" data-scene="0">
+    <div class="mapwrap" id="map1"></div>
+    <div style="position:relative; z-index:2">
+      <p class="kicker reveal" style="--d:.1s">Research decision‑support</p>
+      <h1 class="reveal" style="--d:.3s">Representative<br/>Location Explorer</h1>
+      <p class="sub reveal" style="--d:.7s">Choose the right places to simulate America's buildings.</p>
+    </div>
+  </section>
+
+  <!-- Scene 2 -->
+  <section class="scene" data-scene="1">
+    <div>
+      <p class="kicker reveal">The problem</p>
+      <h2 class="reveal" style="--d:.25s">You can't simulate everywhere.</h2>
+      <p class="sub reveal" style="--d:.6s">So which handful of places genuinely represent the whole country?</p>
+    </div>
+  </section>
+
+  <!-- Scene 3 -->
+  <section class="scene" data-scene="2">
+    <div>
+      <p class="kicker reveal">The method</p>
+      <h2 class="reveal" style="--d:.2s">20 representative catchments</h2>
+      <div class="matrix reveal" id="matrix" style="--d:.5s;margin:1.8vw auto 0"></div>
+      <div class="legend reveal" style="--d:.7s" id="legend"></div>
+    </div>
+  </section>
+
+  <!-- Scene 4 -->
+  <section class="scene" data-scene="3">
+    <div>
+      <p class="kicker reveal">ZIP codes, done right</p>
+      <div class="card reveal" style="--d:.25s;margin:1.4vw auto 0">
+        <div class="zipbig">19104</div>
+        <div class="chips">
+          <span class="chip" style="animation-delay:.5s">ZCTA 19104</span>
+          <span class="chip" style="animation-delay:.8s">Philadelphia County</span>
+          <span class="chip gold" style="animation-delay:1.1s">CBSA 37980</span>
+        </div>
+      </div>
+      <p class="sub reveal" style="--d:.4s">A ZIP is an entry point — never blurred into a boundary it isn't.</p>
+    </div>
+  </section>
+
+  <!-- Scene 5 -->
+  <section class="scene" data-scene="4">
+    <div>
+      <p class="kicker reveal">Build a scenario</p>
+      <div class="panel reveal" style="--d:.3s;margin:1.4vw auto 0">
+        <div class="slider"><span>Housing coverage</span><div class="track"><div class="fill" style="--w:45%"></div></div></div>
+        <div class="slider"><span>Population density</span><div class="track"><div class="fill" style="--w:35%"></div></div></div>
+        <div class="slider"><span>Population coverage</span><div class="track"><div class="fill" style="--w:20%"></div></div></div>
+        <div class="slider"><span>Density screen</span><div class="track"><div class="fill" style="--w:60%"></div></div></div>
+      </div>
+      <p class="sub reveal" style="--d:.6s">Tune the weights and rules — a deterministic allocation updates instantly.</p>
+    </div>
+  </section>
+
+  <!-- Scene 6 -->
+  <section class="scene" data-scene="5">
+    <svg class="scatter" id="scatter" viewBox="0 0 260 140"></svg>
+    <div>
+      <p class="kicker reveal">Measured trade‑offs</p>
+      <div class="kpi reveal" style="--d:.25s"><span id="kpinum">0.0%</span><small>Coverage efficiency</small></div>
+      <p class="sub reveal" style="--d:.7s">Protecting national coverage retains 99.7% of the unconstrained score — and every substitution shows why.</p>
+    </div>
+  </section>
+
+  <!-- Scene 7 -->
+  <section class="scene" data-scene="6">
+    <div>
+      <p class="kicker reveal">Transparent by design</p>
+      <div class="badges reveal" style="--d:.3s;margin:1.6vw auto 0">
+        <div class="badge"><div class="tick">✓</div><b>Deterministic</b><i>Same inputs, same result</i></div>
+        <div class="badge"><div class="tick">✓</div><b>Reproducible</b><i>Versioned, exportable scenarios</i></div>
+        <div class="badge"><div class="tick">✓</div><b>Auditable</b><i>Exact simulation filters</i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 8 -->
+  <section class="scene" data-scene="7">
+    <div>
+      <div class="brandmark reveal" style="--d:.1s">
+        <svg width="60%" viewBox="0 0 32 32"><path d="M16 5c-3.9 0-7 3.1-7 7C9 17.5 16 27 16 27s7-9.5 7-15c0-3.9-3.1-7-7-7z" fill="none" stroke="#5fcabf" stroke-width="2"/><circle cx="16" cy="11.6" r="2.6" fill="#5fcabf"/></svg>
+      </div>
+      <h2 class="reveal" style="--d:.3s">Representative Location Explorer</h2>
+      <p class="sub reveal" style="--d:.6s">Rigorous method, made inspectable.</p>
+      <a class="url reveal" style="--d:.9s" id="ctaurl">Explore it live →</a>
+    </div>
+  </section>
+
+  <div class="cc" id="cc"><span></span></div>
+  <div class="progress"><i id="bar"></i></div>
+
+  <div class="controls" id="controls" hidden>
+    <button id="muteBtn" title="Mute narration">🔊 Voice</button>
+    <button id="replayBtn" title="Replay">↻ Replay</button>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="panelc">
+      <p class="badge-soft">60‑second product tour</p>
+      <h1 style="font-size:4.4vw;margin-top:1vw">Representative<br/>Location Explorer</h1>
+      <button class="play" id="playBtn">▶ Play with narration</button>
+      <p class="hint">Narration uses your device's built‑in voice (best on macOS Safari/Chrome).<br/>Tip: screen‑record this window for a voiced MP4. A music bed plays softly.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- US map (reuses the app's projection + outline) ----------
+const US_PATHS = [
+  "M44 83 L103 61 L174 63 L211 81 L262 80 L305 93 L355 102 L403 88 L463 101 L512 82 L579 85 L632 104 L697 91 L758 122 L797 183 L771 223 L744 245 L730 301 L690 318 L665 345 L629 336 L602 287 L568 276 L541 251 L507 267 L474 255 L446 277 L415 252 L380 271 L347 260 L310 282 L274 262 L247 273 L222 238 L188 238 L163 214 L133 206 L116 173 L72 163 Z",
+  "M657 350 L679 361 L690 394 L681 430 L667 416 L658 385 Z"
+];
+const CLIMATE = {cold:"#3977a8", dry:"#c99a38", humid:"#0a9690", marine:"#786ba8", mixed:"#b7594d"};
+const METROS = [
+  [-122.33,47.61,"marine"],[-122.68,45.52,"marine"],[-124.16,40.80,"marine"],
+  [-118.24,34.05,"dry"],[-112.07,33.45,"dry"],[-111.89,40.76,"cold"],
+  [-104.99,39.74,"cold"],[-93.27,44.98,"cold"],[-87.65,41.85,"cold"],
+  [-94.58,39.10,"cold"],[-74.0,40.71,"cold"],[-71.06,42.36,"cold"],
+  [-95.37,29.76,"humid"],[-90.07,29.95,"humid"],[-80.19,25.76,"humid"],[-96.80,32.78,"humid"],
+  [-84.39,33.75,"mixed"],[-77.04,38.90,"mixed"],[-86.78,36.16,"mixed"]
+];
+const PHILLY = [-75.16,39.95];
+function project(lon,lat){ return [((lon+126)/60)*840, ((50.5-lat)/27)*430+12]; }
+function buildMap(el){
+  const dots = METROS.map(([lon,lat,c],i)=>{ const [x,y]=project(lon,lat);
+    return `<circle class="dot" style="animation-delay:${0.5+i*0.07}s" cx="${x}" cy="${y}" r="4.2" fill="${CLIMATE[c]}"/>`; }).join("");
+  const [px,py]=project(...PHILLY);
+  const philly = `<circle class="ring" cx="${px}" cy="${py}" stroke="#f3dca6"/><circle class="dot" style="animation-delay:1.6s" cx="${px}" cy="${py}" r="6" fill="#f3dca6"/>`;
+  el.innerHTML = `<svg viewBox="0 0 840 460" xmlns="http://www.w3.org/2000/svg">
+    ${US_PATHS.map(d=>`<path class="us-base" d="${d}"/>`).join("")}
+    ${US_PATHS.map(d=>`<path class="us-glow" d="${d}"/>`).join("")}
+    ${dots}${philly}</svg>`;
+}
+buildMap(document.getElementById("map1"));
+
+// particles
+const pc = document.getElementById("particles");
+for(let i=0;i<26;i++){ const s=document.createElement("i");
+  s.style.left=Math.random()*100+"%"; s.style.top=(60+Math.random()*40)+"%";
+  s.style.animationDuration=(7+Math.random()*9)+"s"; s.style.animationDelay=(-Math.random()*9)+"s";
+  s.style.transform=`scale(${0.5+Math.random()*1.6})`; pc.appendChild(s); }
+
+// strata matrix + legend
+const climates=[["Cold & Very Cold","cold"],["Hot‑Dry & Mixed Dry","dry"],["Hot‑Humid","humid"],["Marine","marine"],["Mixed‑Humid","mixed"]];
+const matrix=document.getElementById("matrix"); let mi=0;
+climates.forEach(([,key])=>{ for(let u=0;u<4;u++){ const d=document.createElement("div");
+  d.className="cell"; d.style.animationDelay=(0.5+mi*0.04)+"s"; d.style.background=CLIMATE[key]+"cc";
+  d.style.opacity=""; mi++; matrix.appendChild(d);} });
+document.getElementById("legend").innerHTML = climates.map(([name,key])=>
+  `<span><i class="swatch" style="background:${CLIMATE[key]}"></i>${name}</span>`).join("");
+
+// scatter for scene 6
+const sc=document.getElementById("scatter");
+let sdots=""; for(let i=0;i<40;i++){ const x=10+Math.random()*240, y=10+Math.random()*120;
+  const keys=Object.values(CLIMATE); sdots+=`<circle cx="${x}" cy="${y}" r="${2+Math.random()*2}" fill="${keys[i%5]}" opacity="${.4+Math.random()*.5}"/>`; }
+sc.innerHTML=sdots;
+
+// ---------- narration timeline ----------
+const SCENES = [
+  {vo:"Meet the Representative Location Explorer — a decision‑support tool for choosing where to simulate America's building stock.", cc:"Choose the right places to simulate America's buildings.", ms:7000},
+  {vo:"National building‑stock and heat‑health studies can't model everywhere. So which handful of places genuinely represent the whole country?", cc:"Which places truly represent the nation?", ms:8200},
+  {vo:"The Explorer selects twenty representative catchments — one for every combination of five climate regions and four urbanicity classes.", cc:"20 catchments · 5 climate regions × 4 urbanicity classes.", ms:8200},
+  {vo:"Search by ZIP code, and it resolves the real geography — ZCTA, county, and metro — without ever blurring a ZIP into a boundary it isn't.", cc:"A ZIP is an entry point — not a boundary.", ms:8600},
+  {vo:"Adjust the density screen, the score weights, and the coverage rules, and watch a deterministic allocation update in real time.", cc:"Tune weights and rules — results update instantly.", ms:8200},
+  {vo:"Every trade‑off is measured. Protecting national coverage here retains over ninety‑nine percent of the unconstrained score, and each substitution shows exactly why.", cc:"Coverage efficiency: 99.7% — every trade‑off measured.", ms:9000},
+  {vo:"It's transparent by design — deterministic, reproducible, and fully auditable, with exact simulation filters and versioned, exportable scenarios.", cc:"Deterministic · Reproducible · Auditable.", ms:8600},
+  {vo:"Representative Location Explorer. Rigorous method, made inspectable. Explore it live.", cc:"Rigorous method, made inspectable. Explore it live.", ms:6500}
+];
+
+const scenes=[...document.querySelectorAll(".scene")];
+const ccEl=document.getElementById("cc"), ccSpan=ccEl.querySelector("span");
+const bar=document.getElementById("bar");
+let idx=-1, muted=false, running=false, timer=null, safety=null;
+const synth=window.speechSynthesis;
+
+function pickVoice(){
+  if(!synth) return null;
+  const vs=synth.getVoices();
+  const pref=["Samantha","Ava (Premium)","Ava","Allison","Google US English","Microsoft Aria Online (Natural) - English (United States)","Microsoft Jenny","Daniel","Karen","Serena"];
+  for(const name of pref){ const v=vs.find(x=>x.name===name||x.name.includes(name)); if(v) return v; }
+  return vs.find(v=>/en[-_]US/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || vs[0] || null;
+}
+
+function setScene(n){
+  idx=n; scenes.forEach((s,i)=>s.classList.toggle("active", i===n));
+  ccSpan.textContent=SCENES[n].cc; ccEl.classList.add("show");
+  bar.style.width=((n+1)/SCENES.length*100)+"%";
+  if(n===5) countTo(document.getElementById("kpinum"),99.7,1400);
+}
+
+function countTo(el,target,dur){
+  const t0=performance.now();
+  (function step(t){ const k=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-k,3);
+    el.textContent=(target*e).toFixed(1)+"%"; if(k<1) requestAnimationFrame(step); })(t0);
+}
+
+function play(n){
+  if(n>=SCENES.length){ return finish(); }
+  setScene(n);
+  clearTimeout(timer); clearTimeout(safety);
+  const advance=()=>{ if(idx===n){ play(n+1); } };
+  if(synth && !muted){
+    try{
+      const u=new SpeechSynthesisUtterance(SCENES[n].vo);
+      const v=pickVoice(); if(v) u.voice=v;
+      u.rate=0.98; u.pitch=1.0; u.volume=1.0; u.lang=(v&&v.lang)||"en-US";
+      let advanced=false; const go=()=>{ if(!advanced){ advanced=true; advance(); } };
+      u.onend=go; u.onerror=go;
+      synth.cancel(); synth.speak(u);
+      safety=setTimeout(go, SCENES[n].ms+6000); // only if onend never fires
+    }catch(e){ timer=setTimeout(advance, SCENES[n].ms); }
+  } else {
+    timer=setTimeout(advance, SCENES[n].ms);
+  }
+}
+
+function finish(){
+  running=false; ccEl.classList.remove("show");
+  document.getElementById("overlay").style.display="grid";
+  document.getElementById("overlay").querySelector(".play").textContent="▶ Replay";
+}
+
+// ---------- soft ambient music bed (Web Audio) ----------
+let actx=null, master=null;
+function startAmbient(){
+  try{
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    master=actx.createGain(); master.gain.value=0.0; master.connect(actx.destination);
+    master.gain.linearRampToValueAtTime(0.05, actx.currentTime+2.5);
+    const chord=[146.83,220.0,277.18,329.63]; // D3 A3 C#4 E4 — calm, hopeful
+    chord.forEach((f,i)=>{
+      const o=actx.createOscillator(); o.type=i%2?"sine":"triangle"; o.frequency.value=f;
+      const g=actx.createGain(); g.gain.value=(i===0?0.6:0.28)/chord.length;
+      const lfo=actx.createOscillator(); lfo.frequency.value=0.05+i*0.013;
+      const lg=actx.createGain(); lg.gain.value=0.12; lfo.connect(lg); lg.connect(g.gain);
+      const flt=actx.createBiquadFilter(); flt.type="lowpass"; flt.frequency.value=900;
+      o.connect(flt); flt.connect(g); g.connect(master); o.start(); lfo.start();
+    });
+  }catch(e){}
+}
+function stopAmbient(){ if(master&&actx){ master.gain.linearRampToValueAtTime(0.0001, actx.currentTime+1.2); } }
+
+// ---------- controls ----------
+const overlay=document.getElementById("overlay");
+const controls=document.getElementById("controls");
+function begin(){
+  overlay.style.display="none"; controls.hidden=false; running=true;
+  if(synth){ synth.cancel(); } // warm up voices
+  startAmbient(); play(0);
+}
+document.getElementById("playBtn").addEventListener("click", ()=>{ if(synth&&synth.getVoices().length===0){ /* trigger load */ synth.getVoices(); } begin(); });
+document.getElementById("replayBtn").addEventListener("click", ()=>{ if(synth) synth.cancel(); begin(); });
+document.getElementById("muteBtn").addEventListener("click", (e)=>{
+  muted=!muted; e.target.textContent=muted?"🔇 Muted":"🔊 Voice";
+  if(muted && synth) synth.cancel();
+});
+if(synth){ synth.onvoiceschanged=()=>{}; }
+// keep voices alive on some browsers
+window.addEventListener("beforeunload", ()=>{ if(synth) synth.cancel(); });
+</script>
+</body>
+</html>

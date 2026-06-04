@@ -1,0 +1,30 @@
+# Render blueprint — one-click public deploy of the Representative Location Explorer.
+#
+# This deploys the app in DEMO MODE: no RLE_ANALYSIS_DATA_DIR is set and the real
+# analytical outputs are not present in the repo, so the service automatically
+# serves the bundled synthetic dataset (data/demo/). No private research data is
+# ever published by this deployment.
+#
+# To deploy:
+#   1. Push this repository to GitHub (already your origin).
+#   2. In the Render dashboard: New -> Blueprint -> connect the repo.
+#   3. Render reads this file and provisions the service. First deploy ~3-5 min.
+#
+# To later serve REAL data on a private host instead, set RLE_ANALYSIS_DATA_DIR
+# to a mounted, read-only path containing the processed CSVs and keep the service
+# private/authenticated.
+
+services:
+  - type: web
+    name: representative-location-explorer
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: "pip install -r backend/requirements.txt && python scripts/generate_demo_data.py"
+    startCommand: "uvicorn backend.fastapi_app:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"

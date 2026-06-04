@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master", "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # The real analytical outputs are private and not in the repo. The bundled
+      # synthetic demo dataset (data/demo, regenerated here for determinism) lets
+      # the full suite run with no external inputs.
+      - name: Regenerate demonstration dataset
+        run: python3 scripts/generate_demo_data.py
+
+      - name: Byte-compile sources
+        run: python3 -m py_compile backend/*.py scripts/*.py tests/*.py
+
+      - name: Run regression suite
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Smoke-test graceful degradation (missing inputs)
+        env:
+          RLE_ANALYSIS_DATA_DIR: /nonexistent/path
+        run: |
+          python3 - <<'PY'
+          from backend import service
+          h = service.health()
+          assert h["status"] == "degraded" and h["data_ready"] is False, h
+          try:
+              service.get_service()
+              raise SystemExit("expected ServiceUnavailableError")
+          except service.ServiceUnavailableError:
+              print("degraded-mode contract OK")
+          PY
+
+  frontend:
+    name: Frontend syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check frontend module parses
+        run: node --check frontend/app.js
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Regenerate demonstration dataset
+        run: python3 scripts/generate_demo_data.py
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.ts starts `python3 -m backend.server` and waits on
+      # /api/health, which serves the demo dataset automatically.
+      - name: Run critical-flow tests
+        run: npm run test:e2e
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
