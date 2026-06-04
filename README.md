@@ -2,14 +2,18 @@
 
 [![CI](https://github.com/hampochimacyril/Location-representation-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/hampochimacyril/Location-representation-explorer/actions/workflows/ci.yml)
 
+**Live demo (synthetic data):** https://representative-location-explorer.onrender.com
+
 Representative Location Explorer is a private research decision-support application for
 selecting and comparing representative U.S. locations for national building-stock and
 heat-health simulations. It wraps the existing location-selection analysis as read-only
 inputs and makes the method inspectable through maps, rankings, scenario controls,
 exports, and a transparent ZIP-code entry flow.
 
-The application does **not** publish data, deploy a public service, or treat ZIP codes,
-ZCTAs, counties, CBSAs, places, and weather stations as interchangeable.
+The application does **not** publish the private analytical data and does **not** treat
+ZIP codes, ZCTAs, counties, CBSAs, places, and weather stations as interchangeable. The
+public demo above serves only the bundled **synthetic** dataset (`data/demo/`); the real
+processed outputs are never deployed.
 
 ## Current Capabilities
 
