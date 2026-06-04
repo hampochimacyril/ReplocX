@@ -5,17 +5,18 @@ private research data — all visuals reference the synthetic demo and the metho
 
 ## Files
 
-- **`promo.html`** — a self-running ~60-second product tour with 3D-style motion,
+- **`promo.html`** — a self-running ~84-second product tour with 3D-style motion,
   on-screen captions, a soft ambient music bed, and **spoken narration** using your
-  device's built-in voices. Open it in a browser and click **▶ Play with narration**.
-  - Best on macOS (Safari/Chrome) where the system voices are high quality. To pick
-    a premium voice, set it in System Settings → Accessibility → Spoken Content →
-    System Voice (e.g. "Ava", "Samantha") before playing.
-  - **To produce a voiced MP4:** screen-record the browser window while it plays
-    (QuickTime → File → New Screen Recording, capture system audio), or use a tool
-    like Descript/CapCut. This gives you a shareable, narrated video.
+  device's voices. Opens with who it's for (modelers, researchers, planners, policy
+  makers), then walks through the app (overview → ZIP → scenario → trade-offs). Open it
+  in a browser and click **▶ Play with narration**.
+  - **Better voice:** a voice menu (top-right) lists installed voices; ★ marks premium
+    ones. On macOS install one once via System Settings → Accessibility → Spoken Content
+    → System Voice → Manage Voices → English → "Ava (Premium)" (or a Siri voice).
+  - **To produce a voiced MP4:** screen-record the window while it plays
+    (QuickTime → New Screen Recording, capture system audio), or use Descript/CapCut.
 
-- **`promo.mp4`** — a rendered 1600×900 motion-graphics video (~53s, H.264 + AAC)
+- **`promo.mp4`** — a rendered 1600×900 motion-graphics video (~84s, H.264 + AAC)
   with an ambient music bed and **no voice**, ready to upload directly to
   LinkedIn / X / a landing page. Add narration from `VO_script.md` if you want voice.
 

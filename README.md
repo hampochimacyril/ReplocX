@@ -187,6 +187,11 @@ A `Procfile` is included for Heroku/Railway-style platforms, and the `Dockerfile
 honors `$PORT` for any container host. To serve **real** data instead, deploy to a
 private/authenticated host and set `RLE_ANALYSIS_DATA_DIR` to a read-only mount.
 
+**Free-tier cold starts:** Render's free web services sleep after ~15 minutes idle,
+so the first request then takes ~30–60s to wake. To keep the demo warm at no cost,
+point a free uptime monitor (e.g. UptimeRobot or cron-job.org) at `…/api/health`
+every 10 minutes.
+
 ## Docker
 
 ```bash
