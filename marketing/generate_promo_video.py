@@ -231,6 +231,7 @@ def s_cta(t):
         label="Explore it live  →"; tw=dr.textlength(label,font=SANSB(28))+64; by=H*0.78
         dr.rounded_rectangle([cx-tw/2,by-30,cx+tw/2,by+30],radius=30,fill=TEAL+(int(a*p2),))
         dr.text((cx,by),label,font=SANSB(28),fill=(6,35,31,int(a*p2)),anchor="mm")
+        dr.text((cx,by+58),"representative-location-explorer.onrender.com",font=SANS(22),fill=SUB+(int(a*p2),),anchor="mm")
     return L
 
 SCENES=[(s_title,7.0),(s_problem,6.0),(s_matrix,7.0),(s_zip,7.0),(s_scenario,7.0),(s_kpi,7.0),(s_trust,6.0),(s_cta,6.0)]
