@@ -45,12 +45,13 @@ scores while assigning one catchment to each stratum. When the unique-location r
 enabled, each target catchment has capacity one. The interface reports substitutions
 and score differences relative to independent within-stratum top candidates.
 
-## Philadelphia Research Priority
+## Research-Priority Overrides
 
-The initial configuration applies a visible research-priority override for
-Philadelphia-Camden-Wilmington, PA-NJ-DE-MD in the Mixed-Humid HDU stratum. The project
-team has stronger local heat-health data coverage in Philadelphia. The candidate ranks
-second before the preference is applied. Researchers can edit or remove this rule.
+No override is applied by default: every stratum keeps its top-ranked candidate. When a
+research priority requires a specific catchment, a user can add a visible override for one
+stratum (climate region + urbanicity + catchment code) in the Scenario builder. Any
+override is labeled, editable, removable, reported with its score difference versus the
+unconstrained top, and preserved in exported scenario JSON.
 
 ## ZIP Search
 

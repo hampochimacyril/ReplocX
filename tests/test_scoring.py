@@ -32,14 +32,13 @@ class ScoringRegressionTests(unittest.TestCase):
                 self.assertEqual("in.metropolitan_and_micropolitan_statistical_area", row["nrel_filter_field"])
             self.assertTrue(row["nrel_value_verified"], row["catchment_label"])
 
-    def test_default_research_override_selects_philadelphia(self) -> None:
-        philly = [
-            row
-            for row in self.result["selected"]
-            if row["climate_region"] == "Mixed-Humid" and row["urbanicity"] == "higher density urban"
-        ]
-        self.assertEqual("37980", philly[0]["catchment_code"])
-        self.assertEqual(2, philly[0]["scenario_rank"])
+    def test_default_scenario_applies_no_override(self) -> None:
+        # No research-priority override is applied by default: every stratum keeps
+        # its top-ranked candidate and there are no substitutions.
+        self.assertEqual([], self.result["config"]["overrides"])
+        self.assertEqual([], self.result["changes"])
+        for row in self.result["selected"]:
+            self.assertEqual(1, row["scenario_rank"], row["catchment_label"])
 
     def test_leading_zero_geography_identifiers_are_preserved(self) -> None:
         lookup = self.service.zip_lookup("02108")

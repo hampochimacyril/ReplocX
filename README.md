@@ -166,7 +166,7 @@ The regression suite checks:
 - rural `in.county` filters
 - non-rural `in.metropolitan_and_micropolitan_statistical_area` filters
 - enumeration-verified baseline filter values
-- Philadelphia preference behavior
+- no research-priority override applied by default
 - leading-zero identifier preservation
 - transparent ZIP-resolution errors
 

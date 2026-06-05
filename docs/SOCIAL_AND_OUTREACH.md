@@ -17,6 +17,13 @@ Repo: https://github.com/hampochimacyril/Location-representation-explorer
 > real Census geography, lets you tune the method and re-solve instantly, and measures
 > every coverage trade-off — deterministic, reproducible, and auditable.
 >
+> The point is not just to post a final table of 20 locations. The 20 are the baseline
+> result; the app is the audit trail. It shows why each place was selected, which places
+> almost won, how much score is lost when a lower-ranked location is chosen for national
+> coverage, and what happens if a collaborator prefers a different city, changes the
+> scoring weights, tightens weather-station rules, or removes a research-priority
+> override.
+>
 > 𝗪𝗵𝗲𝗿𝗲 𝗶𝘁 𝗰𝗮𝗻 𝗯𝗲 𝘂𝘀𝗲𝗱:
 > • Selecting simulation sites for NREL ResStock / ComStock building-stock runs
 > • Building a reproducible sampling frame for national energy or decarbonization studies

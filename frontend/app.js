@@ -244,7 +244,7 @@ function overview() {
   workspace.innerHTML = `
     ${intro("A reproducible national location strategy", "Explore how 20 representative target catchments are selected across five climate regions and four urbanicity categories. Building-stock geography, ZIP entry points, and weather stations stay deliberately separate.")}
     ${aboutDemoBanner()}
-    <div class="info-banner"><strong>Current scenario.</strong><span>Density-screened candidates at or above the 60th percentile are scored with the baseline 45 / 35 / 20 formula. Distinct target catchments are maximized, with a documented Philadelphia research-priority override for Mixed-Humid HDU.</span></div>
+    <div class="info-banner"><strong>Current scenario.</strong><span>Density-screened candidates at or above the 60th percentile are scored with the baseline 45 / 35 / 20 formula. Distinct target catchments are maximized, and no research-priority override is applied by default.</span></div>
     <section class="kpi-grid">
       ${kpi("Target strata", kpis.target_strata, "5 climate regions × 4 urbanicity categories", "teal")}
       ${kpi("Distinct locations", kpis.distinct_locations, "Represented target catchments", "teal")}
@@ -267,8 +267,13 @@ function overview() {
       <article class="card"><div class="card-header"><div><h4>Station-distance distribution</h4><p class="card-subtitle">Miles between target catchment centroids and selected climate stations.</p></div>${badge("QC pending", "gold")}</div>${distanceChart(selected)}</article>
     </section>
     <section class="card" style="margin-top:16px">
-      <div class="card-header"><div><h4>Research-priority overrides</h4><p class="card-subtitle">Overrides are explicit, removable, and retained in the scenario audit trail.</p></div>${badge("1 active", "gold")}</div>
-      <div class="priority-card"><div class="badge-row">${badge("Mixed-Humid", "navy")}${badge("HDU")}${badge("Research priority", "gold")}</div><p><strong>Philadelphia-Camden-Wilmington, PA-NJ-DE-MD</strong><br>Unconstrained rank 2 · score ${score(selected.find(row => row.catchment_code === "37980")?.scenario_score)} · selected because the team has stronger local heat-health data coverage in Philadelphia.</p></div>
+      <div class="card-header"><div><h4>Research-priority overrides</h4><p class="card-subtitle">Overrides are explicit, removable, and retained in the scenario audit trail.</p></div>${badge(`${scenario.config.overrides.length} active`, scenario.config.overrides.length ? "gold" : "")}</div>
+      ${scenario.config.overrides.length
+        ? scenario.config.overrides.map((ov) => {
+            const sel = selected.find((row) => row.climate_region === ov.climate_region && row.urbanicity === ov.urbanicity);
+            return `<div class="priority-card"><div class="badge-row">${badge(ov.climate_region, "navy")}${badge(sel?.urbanicity_short || "")}${badge("Research priority", "gold")}</div><p><strong>${esc(sel?.catchment_label || `${ov.catchment_type} ${ov.catchment_code}`)}</strong><br>Unconstrained rank ${sel?.scenario_rank ?? "—"} · score ${score(sel?.scenario_score)} · ${esc(ov.rationale)}</p></div>`;
+          }).join("")
+        : `<p class="card-subtitle">No research-priority override is active. The baseline selects each stratum's top-ranked candidate. Add an override in the Scenario builder to force a specific catchment.</p>`}
     </section>`;
   bindMapLayers(overview);
   const dismiss = $("#dismiss-demo");
@@ -372,12 +377,12 @@ function scenarioBuilder() {
           <label class="check-line"><input id="qc" type="checkbox" ${config.require_weather_qc ? "checked" : ""}><span><strong>Require complete hourly weather QC</strong><br>Disabled by default because the current source workbook does not contain hourly completeness metrics.</span></label>
         </article>
         <article class="card">
-          <div class="card-header"><div><h4>Research-priority override</h4><p class="card-subtitle">The initial scenario documents Philadelphia. Clear the checkbox to remove it.</p></div>${badge("Audit trail", "gold")}</div>
-          <label class="check-line"><input id="override-enabled" type="checkbox" ${overrides.length ? "checked" : ""}><span><strong>Apply Mixed-Humid HDU research priority</strong><br>Seed Philadelphia-Camden-Wilmington because local heat-health data coverage is stronger.</span></label>
+          <div class="card-header"><div><h4>Research-priority override (optional)</h4><p class="card-subtitle">Off by default. Force a specific catchment for one stratum; the substitution and its score cost are kept in the audit trail.</p></div>${badge("Audit trail", "gold")}</div>
+          <label class="check-line"><input id="override-enabled" type="checkbox" ${overrides.length ? "checked" : ""}><span><strong>Apply a research-priority override</strong><br>Seed your preferred catchment for the chosen stratum instead of its top-ranked candidate.</span></label>
           <div class="override-editor">
-            <label class="field-label">Climate region<input class="text-input" value="Mixed-Humid" disabled></label>
-            <label class="field-label">Urbanicity<input class="text-input" value="higher density urban" disabled></label>
-            <label class="field-label">CBSA code<input class="text-input" id="override-code" value="${esc(overrides[0]?.catchment_code || "37980")}" maxlength="5"></label>
+            <label class="field-label">Climate region<select class="text-input" id="override-climate">${Object.keys(climateColors).map((c) => `<option ${overrides[0]?.climate_region === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
+            <label class="field-label">Urbanicity<select class="text-input" id="override-urbanicity">${[["higher density urban", "HDU"], ["lower density urban", "LDU"], ["suburban/small town", "Suburban"], ["rural", "Rural"]].map(([value, label]) => `<option value="${value}" ${overrides[0]?.urbanicity === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+            <label class="field-label">Catchment code<input class="text-input" id="override-code" value="${esc(overrides[0]?.catchment_code || "")}" maxlength="5" placeholder="e.g. 35620"></label>
             <span>${badge("Editable", "gold")}</span>
           </div>
         </article>
@@ -391,6 +396,9 @@ function scenarioBuilder() {
 
 function scenarioPayload() {
   const enabled = $("#override-enabled").checked;
+  const overrideClimate = $("#override-climate")?.value || "";
+  const overrideUrbanicity = $("#override-urbanicity")?.value || "higher density urban";
+  const overrideCode = ($("#override-code")?.value || "").trim();
   return {
     version: "1.0",
     name: "User-defined scenario",
@@ -404,13 +412,13 @@ function scenarioPayload() {
       population_density_percentile: Number($("#population-density").value),
       population_coverage_percentile: Number($("#population").value),
     },
-    overrides: enabled
+    overrides: enabled && overrideCode
       ? [{
-          climate_region: "Mixed-Humid",
-          urbanicity: "higher density urban",
-          catchment_type: "CBSA",
-          catchment_code: $("#override-code").value,
-          rationale: "Research-priority override: Philadelphia has stronger local heat-health data coverage for the project team.",
+          climate_region: overrideClimate,
+          urbanicity: overrideUrbanicity,
+          catchment_type: overrideUrbanicity === "rural" ? "County" : "CBSA",
+          catchment_code: overrideCode,
+          rationale: "User-defined research-priority override.",
         }]
       : [],
   };
@@ -438,7 +446,7 @@ function refreshWeightState() {
 
 function bindScenarioEvents() {
   let timer;
-  document.querySelectorAll("#density,#max-distance,#housing,#population-density,#population,#penalty,#unique,#qc,#override-enabled,#override-code").forEach((input) =>
+  document.querySelectorAll("#density,#max-distance,#housing,#population-density,#population,#penalty,#unique,#qc,#override-enabled,#override-code,#override-climate,#override-urbanicity").forEach((input) =>
     input.addEventListener("input", () => {
       const balanced = refreshWeightState();
       clearTimeout(timer);
@@ -680,7 +688,7 @@ function methodology() {
       <section><h4>Catchment boundary rules</h4><p>Higher-density urban, lower-density urban, and suburban / small-town tracts are aggregated within a CBSA. Rural tracts are aggregated within a county. The associated ResStock filters are exact and deliberately different:</p><div class="formula">Non-rural: in.metropolitan_and_micropolitan_statistical_area<br>Rural:     in.county<br><br>Do not substitute in.city for rural selections.</div></section>
       <section><h4>Density screen and score</h4><p>Candidates at or above the configurable within-stratum population-density percentile are retained. The baseline threshold is 60%.</p><div class="formula">score = 0.45 × housing-unit coverage percentile<br>      + 0.35 × population-density percentile<br>      + 0.20 × population-coverage percentile</div></section>
       <section><h4>Unique-location optimization</h4><p>The baseline global allocation selects one candidate per stratum while maximizing the total score and preserving distinct represented catchments. If that rule selects a lower-ranked alternative, the explorer reports the score difference and substitution rationale. The rule can be disabled for sensitivity analysis.</p></section>
-      <section><h4>Research-priority override</h4><p>Philadelphia-Camden-Wilmington is seeded as the preferred Mixed-Humid HDU catchment because the project team has stronger local heat-health data coverage in Philadelphia. The candidate has unconstrained rank 2. The override is labeled, editable, removable, and preserved in exported scenario JSON.</p></section>
+      <section><h4>Research-priority overrides</h4><p>No override is applied by default: each stratum keeps its top-ranked candidate. When a research priority requires a specific catchment, an override can be added for a single stratum. Any override is labeled, editable, removable, reported with its score difference versus the unconstrained top, and preserved in exported scenario JSON.</p></section>
       <section><h4>Data sources</h4><ul>${provenance.sources.map(source => `<li><strong>${esc(source.name)}.</strong> ${esc(source.role)} ${source.url ? `<a href="${esc(source.url)}" rel="noreferrer">${esc(source.url)}</a>` : esc(source.file || "")}</li>`).join("")}</ul><p><strong>Boundary system:</strong> ${esc(provenance.boundary_system)} · <strong>Method version:</strong> ${esc(provenance.method_version)}.</p></section>
       <section><h4>Known limitations and pre-simulation QC</h4><ul>${provenance.limitations.map(item => `<li>${esc(item)}</li>`).join("")}<li>${esc(provenance.zip_crosswalk.limitation)}</li><li>Hourly temperature and humidity completeness, station distance, elevation, and coastal context require review before simulation.</li></ul></section>
     </article>`;

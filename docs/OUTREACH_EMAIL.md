@@ -27,6 +27,15 @@ Explorer**, a web application that:
   **export** versioned, reproducible scenarios and exact simulation filters;
 - measures every **coverage trade-off** (e.g., 99.7% coverage efficiency in the baseline).
 
+The app is useful because the 20 locations are not just a static list; they are the
+result of methodological choices. A table can publish the baseline answer, but the app
+shows the audit trail: why those places were selected, which candidates were runner-up,
+what changes if weights or weather-station rules change, whether an override such as
+Philadelphia is still justified, and how a user's preferred location compares against the
+recommended representative set. In that sense, the app is both a publication of the
+baseline 20 catchments and a way for reviewers, collaborators, and future users to test
+whether the selection remains defensible under different research priorities.
+
 It's live as a public demo (synthetic data — no private research data is exposed):
 **https://representative-location-explorer.onrender.com**
 Source and methodology: **https://github.com/hampochimacyril/Location-representation-explorer**
@@ -58,7 +67,10 @@ Best regards,
 > Hi [Name] — I built and deployed a working web app from my PhD that selects
 > representative U.S. locations for national building-energy and heat-health simulations
 > (live demo: representative-location-explorer.onrender.com). It's tested, open, and
-> already useful on demonstration data. With modest support I can move it from demo to
-> production: ingest the full national datasets, integrate with NREL ResStock /
-> OpenStudio, and add the weather-QC and geography layers needed for real studies. I've
-> attached a one-page roadmap (PRODUCTION_ROADMAP.md). Could we find 20 minutes to talk?
+> already useful on demonstration data. The point is not only to publish a final list of
+> 20 locations; it is to let reviewers and collaborators inspect why those 20 were chosen,
+> compare preferred alternatives, and rerun the selection under different assumptions.
+> With modest support I can move it from demo to production: ingest the full national
+> datasets, integrate with NREL ResStock / OpenStudio, and add the weather-QC and
+> geography layers needed for real studies. I've attached a one-page roadmap
+> (PRODUCTION_ROADMAP.md). Could we find 20 minutes to talk?

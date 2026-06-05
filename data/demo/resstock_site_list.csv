@@ -15,7 +15,7 @@ CBSA,11776,Marine HDU catchment 1 (demo),in.metropolitan_and_micropolitan_statis
 CBSA,11924,Marine LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,11924,True,Enumeration-verified demonstration mapping.,PENDING
 CBSA,12072,Marine Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12072,True,Enumeration-verified demonstration mapping.,PENDING
 County,12220,Marine Rural catchment 1 (demo),in.county,12220,True,Enumeration-verified demonstration mapping.,PENDING
-CBSA,37980,"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD (demo)",in.metropolitan_and_micropolitan_statistical_area,37980,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,12368,Mixed-Humid HDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12368,True,Enumeration-verified demonstration mapping.,PENDING
 CBSA,12516,Mixed-Humid LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12516,True,Enumeration-verified demonstration mapping.,PENDING
 CBSA,12664,Mixed-Humid Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12664,True,Enumeration-verified demonstration mapping.,PENDING
 County,12812,Mixed-Humid Rural catchment 1 (demo),in.county,12812,True,Enumeration-verified demonstration mapping.,PENDING

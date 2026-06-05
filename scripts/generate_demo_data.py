@@ -12,10 +12,7 @@ suite checks against real data:
 
 * exactly 2,959 scored candidates,
 * the 5 climate-region x 4 urbanicity strata (20 total), one distinct selection
-  each,
-* a Mixed-Humid / higher-density-urban stratum where CBSA 37980
-  (Philadelphia-Camden-Wilmington) is the unconstrained rank-2 candidate, so the
-  documented research-priority override produces a single transparent change,
+  each (every stratum keeps its single unambiguous top candidate; no override),
 * rural strata mapped to ``in.county`` and non-rural strata to
   ``in.metropolitan_and_micropolitan_statistical_area``, all enumeration-verified.
 
@@ -58,14 +55,6 @@ CLIMATE_CENTROID = {
     "Mixed-Humid": (38.6, -80.6),
 }
 URBAN_OFFSET = {"HDU": (0.0, 0.0), "LDU": (0.6, 0.4), "Suburban": (-0.5, 0.7), "Rural": (1.1, -0.9)}
-
-# The Mixed-Humid / HDU stratum is special: a higher-scoring "winner" plus the
-# Philadelphia CBSA at rank 2, so the override changes exactly one assignment.
-MH_HDU = ("Mixed-Humid", ("higher density urban", "HDU"))
-PHILLY_CODE = "37980"
-PHILLY_LABEL = "Philadelphia-Camden-Wilmington, PA-NJ-DE-MD (demo)"
-WINNER_CODE = "47900"
-WINNER_LABEL = "Washington-Arlington-Alexandria, DC-VA-MD-WV (demo)"
 
 CANDIDATE_FIELDS = [
     "climate_region", "urbanicity", "urbanicity_short", "catchment_type",
@@ -147,27 +136,16 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
             candidates.append(row)
             by_stratum[stratum].append(row)
 
-    # Inject the Philadelphia narrative into Mixed-Humid / HDU without changing
-    # the total count: repurpose the two highest filler slots.
-    mh = by_stratum[MH_HDU]
-    winner = mh[0]
-    winner.update({"catchment_code": WINNER_CODE, "catchment_label": WINNER_LABEL,
-                   "location_score": 0.952, "housing_unit_coverage_percentile": 0.952,
-                   "population_density_percentile": 0.952, "population_coverage_percentile": 0.952})
-    philly = mh[1]
-    philly.update({"catchment_code": PHILLY_CODE, "catchment_label": PHILLY_LABEL,
-                   "location_score": 0.901, "housing_unit_coverage_percentile": 0.901,
-                   "population_density_percentile": 0.901, "population_coverage_percentile": 0.901})
-
-    # Rank within each stratum and choose the baseline selection (override applied
-    # for the Mixed-Humid HDU stratum: Philadelphia, not the unconstrained top).
+    # Rank within each stratum and choose the baseline selection: the single
+    # unambiguous top candidate per stratum. No research-priority override is
+    # applied by default (overrides remain a user-supplied feature).
     selected_rows: list[dict] = []
     for stratum, rows in by_stratum.items():
         rows.sort(key=lambda r: (-float(r["location_score"]), int(r["catchment_code"])))
         for rank, row in enumerate(rows, start=1):
             row["selection_rank"] = rank
             row["selected"] = False
-        chosen = next((r for r in rows if r["catchment_code"] == PHILLY_CODE), rows[0]) if stratum == MH_HDU else rows[0]
+        chosen = rows[0]
         chosen["selected"] = True
         selected_rows.append(chosen)
 
