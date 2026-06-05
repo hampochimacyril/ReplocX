@@ -19,7 +19,8 @@ The bundled crosswalk is a demonstration subset. Try `19104`, `02108`, `10001`,
 ## Scenario Builder
 
 Adjust the density screen, weights, unique-location rule, maximum station distance,
-station-distance penalty, weather-QC requirement, and Philadelphia preference. The
+station-distance penalty, weather-QC requirement, and an optional research-priority
+override (off by default). The
 live preview reports represented catchments, eligible candidates, combined score,
 mapping cautions, and changed assignments.
 

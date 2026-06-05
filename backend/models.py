@@ -45,16 +45,8 @@ class Override:
         )
 
 
-DEFAULT_OVERRIDE = Override(
-    climate_region="Mixed-Humid",
-    urbanicity="higher density urban",
-    catchment_type="CBSA",
-    catchment_code="37980",
-    rationale=(
-        "Research-priority override: Philadelphia has stronger local "
-        "heat-health data coverage for the project team."
-    ),
-)
+# No location is given a research-priority override by default. Overrides remain a
+# fully supported, user-supplied feature, but the baseline scenario applies none.
 
 
 @dataclass(frozen=True)
@@ -67,7 +59,7 @@ class ScenarioConfig:
     max_station_distance_miles: float = 250.0
     station_distance_penalty: float = 0.0
     require_weather_qc: bool = False
-    overrides: tuple[Override, ...] = (DEFAULT_OVERRIDE,)
+    overrides: tuple[Override, ...] = ()
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any] | None) -> "ScenarioConfig":
@@ -97,7 +89,7 @@ class ScenarioConfig:
 
         supplied_overrides = payload.get("overrides")
         if supplied_overrides is None:
-            overrides = (DEFAULT_OVERRIDE,)
+            overrides = ()
         else:
             overrides = tuple(Override.from_dict(item) for item in supplied_overrides)
 
