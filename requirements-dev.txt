@@ -1,5 +1,5 @@
 black>=24.8,<26
-coverage>=7.6,<8
+coverage>=7.14.1,<8
 mypy>=1.11,<2
 pip-audit>=2.7,<3
 ruff>=0.6,<1
