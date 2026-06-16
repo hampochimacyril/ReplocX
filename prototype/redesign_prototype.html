@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ReplocX — Redesign Prototype (Session 5)</title>
+<!--
+  ReplocX redesign prototype — Session 5 deliverable.
+  Self-contained (no network). Demonstrates the information architecture and layout
+  defined in docs/UI_REDESIGN_SPEC.md against the 20 real selected national catchments.
+  The "map" is a schematic lon/lat projection (production uses MapLibre GL JS).
+  Inline SVGs stand in for Lucide icons (production uses the Lucide set).
+  This is a layout/flow prototype, not the production build.
+-->
+<style>
+  :root{
+    --bg:#FFFFFF; --surface:#F7F8FA; --surface-2:#EEF1F4;
+    --border:#D7DCE2; --border-strong:#B4BCC6;
+    --text:#11161C; --text-muted:#5B6470;
+    --accent:#1F6FEB; --accent-weak:#E3ECFD;
+    --ok:#1F8A53; --warn:#B5740B; --danger:#C0392B; --info:#2563A8;
+    --radius:4px;
+    --shadow:0 1px 2px rgba(16,22,28,.08), 0 2px 8px rgba(16,22,28,.06);
+    --c-cold:#2C7FB8; --c-hotdry:#D95F0E; --c-hothumid:#C0392B; --c-marine:#1F8A53; --c-mixed:#756BB1;
+    --font:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:var(--font);color:var(--text);background:var(--bg);font-size:14px;line-height:20px}
+  .num{font-variant-numeric:tabular-nums}
+  button{font-family:inherit;font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;cursor:pointer}
+  button:hover{background:var(--surface)}
+  button:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn-accent{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-accent:hover{filter:brightness(.95);background:var(--accent)}
+  .muted{color:var(--text-muted)}
+  h1,h2,h3{margin:0;font-weight:600}
+  h2{font-size:22px;line-height:28px}
+  h3{font-size:18px;line-height:24px}
+  .kicker{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)}
+  svg.icon{width:20px;height:20px;display:block}
+  svg.icon-sm{width:16px;height:16px;display:block}
+
+  /* ---- App shell ---- */
+  .app{display:grid;grid-template-rows:auto 1fr;height:100%}
+  .topbar{display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:600}
+  .brand .mark{width:22px;height:22px;border:2px solid var(--accent);border-radius:3px;display:grid;place-items:center;color:var(--accent);font-weight:700;font-size:12px}
+  .search{flex:1;max-width:560px;display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;background:var(--surface)}
+  .search input{border:0;background:transparent;outline:none;width:100%;font-size:13px;color:var(--text)}
+  .badge{font-size:11px;font-weight:600;letter-spacing:.03em;padding:3px 7px;border-radius:var(--radius);border:1px solid var(--border)}
+  .badge.prod{background:#E7F4EC;color:var(--ok);border-color:#bfe0cc}
+  .badge.demo{background:#FBF1DD;color:var(--warn);border-color:#ecd9ad}
+  .chip{display:flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;background:var(--surface)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot.saved{background:var(--ok)} .dot.dirty{background:var(--warn)}
+  .topbar .spacer{flex:1}
+  .menu{position:relative}
+  .menu-list{position:absolute;right:0;top:calc(100% + 4px);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);min-width:230px;z-index:40;padding:4px}
+  .menu-list button{display:flex;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;gap:8px;align-items:center}
+  .menu-list button:hover{background:var(--surface)}
+  .hidden{display:none !important}
+
+  .body{display:grid;grid-template-columns:56px 1fr;min-height:0}
+  .nav{border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:4px}
+  .nav button{width:40px;height:40px;border:0;background:transparent;border-radius:var(--radius);display:grid;place-items:center;color:var(--text-muted);position:relative}
+  .nav button:hover{background:var(--surface-2);color:var(--text)}
+  .nav button.active{color:var(--accent)}
+  .nav button.active::before{content:"";position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+  .nav .tip{position:absolute;left:48px;background:var(--text);color:#fff;font-size:12px;padding:3px 7px;border-radius:var(--radius);white-space:nowrap;opacity:0;pointer-events:none;transform:translateX(-4px);transition:.12s}
+  .nav button:hover .tip{opacity:1;transform:none}
+
+  .ctx{min-height:0;overflow:hidden}
+
+  /* ---- Map workspace layout ---- */
+  .ws{display:grid;grid-template-columns:320px 1fr;grid-template-rows:1fr;height:100%;min-height:0}
+  .panel{border-right:1px solid var(--border);background:var(--surface);overflow:auto;padding:14px}
+  .panel h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:8px}
+  .panel .group{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .panel .group:last-child{border-bottom:0}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+  .checks{display:flex;flex-direction:column;gap:5px}
+  .check{display:flex;align-items:center;gap:8px;font-size:13px}
+  .check .swatch{width:10px;height:10px;border-radius:2px;flex:none}
+  input[type=range]{width:100%}
+  .rowflex{display:flex;gap:8px;align-items:center}
+  .small{font-size:12px}
+
+  .stage{display:grid;grid-template-rows:1fr 184px;min-height:0}
+  .mapwrap{position:relative;min-height:0;background:linear-gradient(0deg,#eef2f6,#eef2f6)}
+  .mapwrap svg.map{width:100%;height:100%;display:block;background:#E9EEF2}
+  .map-ctrls{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;z-index:10}
+  .map-ctrls button{width:34px;height:34px;display:grid;place-items:center;background:var(--bg);box-shadow:var(--shadow);padding:0}
+  .legend{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px 10px;font-size:12px;z-index:10;max-width:240px}
+  .legend .row{display:flex;align-items:center;gap:6px;margin-top:3px}
+  .attr{position:absolute;right:8px;bottom:6px;font-size:10px;color:#5b6470;background:rgba(255,255,255,.7);padding:1px 5px;border-radius:3px;z-index:10}
+  .layers{position:absolute;left:10px;top:10px;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px 10px;font-size:12px;z-index:10}
+  .layers .check{font-size:12px;margin-top:3px}
+
+  .strip{border-top:1px solid var(--border);background:var(--bg);display:grid;grid-template-columns:minmax(280px,1.2fr) 1fr 1fr;min-height:0}
+  .strip > div{padding:10px 12px;border-right:1px solid var(--border);overflow:auto}
+  .strip > div:last-child{border-right:0}
+  .strip h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)}
+  /* coverage matrix */
+  table.matrix{border-collapse:collapse;font-size:11px;width:100%}
+  table.matrix th,table.matrix td{border:1px solid var(--border);padding:0;text-align:center}
+  table.matrix th{background:var(--surface);color:var(--text-muted);font-weight:500;padding:3px 4px;font-size:10px}
+  table.matrix td .cell{width:100%;height:30px;display:grid;place-items:center;cursor:pointer;font-weight:600;color:#fff}
+  table.matrix td .cell:hover{outline:2px solid var(--accent);outline-offset:-2px}
+  /* charts */
+  .bars{display:flex;align-items:flex-end;gap:3px;height:96px;border-bottom:1px solid var(--border-strong)}
+  .bars .bar{flex:1;background:var(--accent);min-height:2px;border-radius:2px 2px 0 0;opacity:.85}
+  .bars .bar.dim{background:var(--border-strong);opacity:.6}
+  .axis{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:3px}
+
+  /* ---- Details drawer ---- */
+  .drawer{position:fixed;top:0;right:0;height:100%;width:380px;max-width:92vw;background:var(--bg);border-left:1px solid var(--border);box-shadow:var(--shadow);z-index:60;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .16s ease}
+  .drawer.open{transform:none}
+  .drawer .dh{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .drawer .db{overflow:auto;padding:0 14px 24px}
+  .sect{padding:12px 0;border-bottom:1px solid var(--border)}
+  .sect:last-child{border-bottom:0}
+  .sect .st{display:flex;align-items:center;gap:7px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:8px}
+  .kv{display:grid;grid-template-columns:128px 1fr;gap:4px 10px;font-size:13px}
+  .kv div:nth-child(odd){color:var(--text-muted)}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:var(--radius);border:1px solid var(--border)}
+  .tag.ok{background:#E7F4EC;color:var(--ok);border-color:#bfe0cc}
+  .tag.warn{background:#FBF1DD;color:var(--warn);border-color:#ecd9ad}
+  .tag.info{background:var(--accent-weak);color:var(--info);border-color:#c5d8f7}
+  .note{font-size:12px;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;margin-top:6px}
+  .scorebar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;margin-top:3px}
+  .scorebar > span{display:block;height:100%;background:var(--accent)}
+
+  /* ---- Catchments table ---- */
+  .tablewrap{height:100%;overflow:auto;padding:14px}
+  table.grid{border-collapse:collapse;width:100%;font-size:13px}
+  table.grid th,table.grid td{border-bottom:1px solid var(--border);padding:7px 10px;text-align:left;white-space:nowrap}
+  table.grid thead th{position:sticky;top:0;background:var(--surface);cursor:pointer;font-weight:600;font-size:12px;color:var(--text-muted)}
+  table.grid tbody tr:hover{background:var(--surface)}
+  table.grid tbody tr.sel{background:var(--accent-weak)}
+  td.rt,th.rt{text-align:right}
+  .pagehead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+
+  /* ---- Compare ---- */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:0;height:100%}
+  .compare > div{padding:14px;overflow:auto}
+  .compare > div:first-child{border-right:1px solid var(--border)}
+  .delta-pos{color:var(--ok)} .delta-neg{color:var(--danger)}
+
+  /* ---- Scenario ---- */
+  .scenario{display:grid;grid-template-columns:360px 1fr;height:100%}
+  .scenario .work{border-right:1px solid var(--border);background:var(--surface);overflow:auto;padding:16px}
+  .scenario .preview{overflow:auto;padding:16px}
+  .weightrow{display:grid;grid-template-columns:120px 1fr 44px;gap:8px;align-items:center;margin-bottom:8px}
+  .sum-ok{color:var(--ok);font-weight:600}.sum-bad{color:var(--danger);font-weight:600}
+  .metricgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
+  .metric{border:1px solid var(--border);border-radius:var(--radius);padding:10px}
+  .metric .v{font-size:22px;font-weight:600}
+  .metric .l{font-size:12px;color:var(--text-muted)}
+
+  /* ---- Methodology ---- */
+  .doc{max-width:760px;margin:0 auto;padding:24px 18px;overflow:auto;height:100%}
+  .doc p{color:#222;}
+  .doc h2{margin:18px 0 8px}
+  .doc h3{margin:16px 0 6px;font-size:15px}
+  .doc table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}
+  .doc th,.doc td{border:1px solid var(--border);padding:6px 8px;text-align:left}
+
+  .protonote{font-size:11px;color:var(--text-muted);padding:4px 12px;background:var(--surface);border-top:1px solid var(--border)}
+
+  @media (max-width:860px){
+    .ws{grid-template-columns:1fr}
+    .panel{position:absolute;z-index:30;width:300px;height:100%;display:none}
+    .panel.show{display:block}
+    .scenario{grid-template-columns:1fr}
+    .compare{grid-template-columns:1fr}
+    .strip{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand"><span class="mark">Rx</span> ReplocX</div>
+    <div class="search">
+      <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" placeholder="Search ZIP (19104), catchment (35620 / Phoenix), or station…" aria-label="Search ZIP, catchment, or station" />
+    </div>
+    <button id="filtToggle" class="hidden" title="Filters">Filters</button>
+    <div class="spacer"></div>
+    <span class="badge prod" id="modeBadge" title="Data mode from /api/v1/health">PRODUCTION</span>
+    <span class="chip"><span class="dot saved" id="scnDot"></span><span id="scnName">Baseline · saved</span></span>
+    <div class="menu">
+      <button id="exportBtn" aria-haspopup="true"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Export ▾</button>
+      <div class="menu-list hidden" id="exportMenu">
+        <button>↳ Site-list CSV <span class="muted small">/exports/site-list.csv</span></button>
+        <button>↳ ResStock sampling CSV <span class="muted small">/exports/resstock-sampling.csv</span></button>
+        <button>↳ OpenStudio manifest JSON <span class="muted small">/exports/openstudio-manifest.json</span></button>
+        <button>↳ Scenario JSON</button>
+        <button>↳ Ranking CSV (filtered)</button>
+        <button>↳ Map image (PNG)</button>
+      </div>
+    </div>
+    <button title="Refresh"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    <button title="Help">?</button>
+  </div>
+
+  <div class="body">
+    <!-- NAV RAIL -->
+    <nav class="nav" aria-label="Primary">
+      <button data-ctx="map" class="active" aria-label="Map workspace"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4 6 2 6-2v14l-6 2-6-2-6 2V6z"/><path d="M9 4v14M15 6v14"/></svg><span class="tip">Map workspace</span></button>
+      <button data-ctx="catchments" aria-label="Catchments table"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg><span class="tip">Catchments</span></button>
+      <button data-ctx="compare" aria-label="Compare"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M6 7H3l3-4 3 4H6zM18 17h3l-3 4-3-4h3z"/></svg><span class="tip">Compare</span></button>
+      <button data-ctx="scenario" aria-label="Scenario"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><circle cx="4" cy="12" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="20" cy="14" r="2"/></svg><span class="tip">Scenario</span></button>
+      <button data-ctx="methodology" aria-label="Methodology and data"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4z"/><path d="M14 4v6h6M8 14h8M8 18h8"/></svg><span class="tip">Methodology &amp; data</span></button>
+    </nav>
+
+    <!-- CONTEXTS -->
+    <main class="ctx" id="ctx"></main>
+  </div>
+  <div class="protonote">Prototype · schematic map (production: MapLibre GL JS) · inline icons stand in for Lucide · data = 20 real selected national catchments (<span class="num">data_mode: production</span>).</div>
+</div>
+
+<!-- DETAILS DRAWER -->
+<aside class="drawer" id="drawer" aria-label="Selection details">
+  <div class="dh">
+    <div style="flex:1">
+      <div class="kicker" id="drKicker">Catchment</div>
+      <div style="font-weight:600" id="drTitle">—</div>
+    </div>
+    <button id="drClose" aria-label="Close details">✕</button>
+  </div>
+  <div class="db" id="drBody"></div>
+</aside>
+
+<script>
+const DATA = [{"climate":"Cold & Very Cold","urb":"higher density urban","urbShort":"HDU","type":"CBSA","code":"35620","label":"New York-Newark-Jersey City, NY-NJ","pop":19536376,"hu":7902744,"popDen":3938.3,"huDen":1593.1,"score":1.0,"dist":3.6,"station":"NY_PORT-AUTH-DOWNTN-MANHATTAN","lat":40.72585,"lon":-73.94867},{"climate":"Cold & Very Cold","urb":"lower density urban","urbShort":"LDU","type":"CBSA","code":"16980","label":"Chicago-Naperville-Elgin, IL-IN","pop":9120795,"hu":3791792,"popDen":2564.0,"huDen":1065.9,"score":0.995,"dist":7.2,"station":"IL_CHICAGO-OHARE-IAP","lat":41.86845,"lon":-87.86651},{"climate":"Cold & Very Cold","urb":"suburban/small town","urbShort":"Suburban","type":"CBSA","code":"24340","label":"Grand Rapids-Wyoming-Kentwood, MI","pop":945567,"hu":378510,"popDen":975.1,"huDen":390.3,"score":0.982,"dist":10.7,"station":"MI_GRAND-RAPIDS-KENT-CO-INT","lat":42.94052,"lon":-85.71783},{"climate":"Cold & Very Cold","urb":"rural","urbShort":"Rural","type":"County","code":"23031","label":"York County; Maine","pop":90689,"hu":43616,"popDen":119.6,"huDen":57.5,"score":0.989,"dist":5.5,"station":"ME_SANFORD-MUNI(AWOS)","lat":43.47293,"lon":-70.71205},{"climate":"Hot-Dry & Mixed Dry","urb":"higher density urban","urbShort":"HDU","type":"CBSA","code":"31080","label":"Los Angeles-Long Beach-Anaheim, CA","pop":12937821,"hu":4734200,"popDen":5892.6,"huDen":2156.2,"score":1.0,"dist":8.4,"station":"CA_LOS-ANGELES-DOWNTOWN-USC","lat":33.98431,"lon":-118.15186},{"climate":"Hot-Dry & Mixed Dry","urb":"lower density urban","urbShort":"LDU","type":"CBSA","code":"38060","label":"Phoenix-Mesa-Chandler, AZ","pop":4707856,"hu":1937302,"popDen":2537.6,"huDen":1044.2,"score":0.974,"dist":2.0,"station":"AZ_PHOENIX-SKY-HARBOR-IAP","lat":33.45731,"lon":-112.00637},{"climate":"Hot-Dry & Mixed Dry","urb":"suburban/small town","urbShort":"Suburban","type":"CBSA","code":"29420","label":"Lake Havasu City-Kingman, AZ","pop":162404,"hu":88058,"popDen":883.5,"huDen":479.1,"score":0.948,"dist":20.7,"station":"AZ_BULLHEAD-CITY","lat":34.95025,"lon":-114.29389},{"climate":"Hot-Dry & Mixed Dry","urb":"rural","urbShort":"Rural","type":"County","code":"06073","label":"San Diego County; California","pop":109789,"hu":34974,"popDen":35.3,"huDen":11.2,"score":0.924,"dist":10.6,"station":"CA_RAMONA","lat":33.14976,"lon":-117.04268},{"climate":"Hot-Humid","urb":"higher density urban","urbShort":"HDU","type":"CBSA","code":"33100","label":"Miami-Fort Lauderdale-West Palm Beach, FL","pop":6095879,"hu":2648282,"popDen":4217.4,"huDen":1832.2,"score":1.0,"dist":4.8,"station":"FL_FT-LAUD-HOLLYWOOD-IAP","lat":26.09307,"lon":-80.23751},{"climate":"Hot-Humid","urb":"lower density urban","urbShort":"LDU","type":"CBSA","code":"19100","label":"Dallas-Fort Worth-Arlington, TX","pop":7398385,"hu":2880694,"popDen":1972.5,"huDen":768.0,"score":0.967,"dist":5.0,"station":"TX_DALLAS-FORT-WORTH-IAP","lat":32.86768,"lon":-96.94242},{"climate":"Hot-Humid","urb":"suburban/small town","urbShort":"Suburban","type":"CBSA","code":"12940","label":"Baton Rouge, LA","pop":692599,"hu":300007,"popDen":984.5,"huDen":426.5,"score":0.988,"dist":9.7,"station":"LA_BATON-ROUGE-METRO-R","lat":30.42668,"lon":-91.04886},{"climate":"Hot-Humid","urb":"rural","urbShort":"Rural","type":"County","code":"45051","label":"Horry County; South Carolina","pop":77887,"hu":33410,"popDen":92.0,"huDen":39.5,"score":0.972,"dist":10.2,"station":"SC_CONWAY-HORRY-CO-AP","lat":33.92912,"lon":-78.99259},{"climate":"Marine","urb":"higher density urban","urbShort":"HDU","type":"CBSA","code":"39420","label":"Pullman, WA","pop":14766,"hu":5508,"popDen":6386.7,"huDen":2382.4,"score":0.783,"dist":2.5,"station":"WA_PULLMAN-MOSCOW-RGNL-AP","lat":46.73443,"lon":-117.16676},{"climate":"Marine","urb":"lower density urban","urbShort":"LDU","type":"CBSA","code":"42660","label":"Seattle-Tacoma-Bellevue, WA","pop":3924808,"hu":1641019,"popDen":2210.7,"huDen":924.3,"score":0.983,"dist":2.2,"station":"WA_SEATTLE-BOEING-FIELD","lat":47.54439,"lon":-122.26744},{"climate":"Marine","urb":"suburban/small town","urbShort":"Suburban","type":"CBSA","code":"14740","label":"Bremerton-Silverdale-Port Orchard, WA","pop":270533,"hu":112933,"popDen":840.9,"huDen":351.0,"score":0.918,"dist":11.0,"station":"WA_BREMERTON-NATIONAL","lat":47.61335,"lon":-122.62979},{"climate":"Marine","urb":"rural","urbShort":"Rural","type":"County","code":"53063","label":"Spokane County; Washington","pop":61736,"hu":24585,"popDen":43.2,"huDen":17.2,"score":0.932,"dist":5.4,"station":"WA_FELTS-FLD","lat":47.69905,"lon":-117.43548},{"climate":"Mixed-Humid","urb":"higher density urban","urbShort":"HDU","type":"CBSA","code":"47620","label":"Warren, PA","pop":9273,"hu":4757,"popDen":3185.5,"huDen":1634.1,"score":1.0,"dist":21.9,"station":"NY_CHATAUQUA-CO-JAMESTO","lat":41.84388,"lon":-79.14073},{"climate":"Mixed-Humid","urb":"lower density urban","urbShort":"LDU","type":"CBSA","code":"47900","label":"Washington-Arlington-Alexandria, DC-VA-MD-WV","pop":5948550,"hu":2361497,"popDen":2272.4,"huDen":902.1,"score":0.959,"dist":9.0,"station":"VA_WASHINGTON-DC-REAGAN-AP","lat":38.89793,"lon":-77.18979},{"climate":"Mixed-Humid","urb":"suburban/small town","urbShort":"Suburban","type":"CBSA","code":"34980","label":"Nashville-Davidson--Murfreesboro--Franklin, TN","pop":1690083,"hu":727689,"popDen":994.0,"huDen":428.0,"score":1.0,"dist":2.3,"station":"TN_NASHVILLE-IAP","lat":36.07731,"lon":-86.68253},{"climate":"Mixed-Humid","urb":"rural","urbShort":"Rural","type":"County","code":"10005","label":"Sussex County; Delaware","pop":72373,"hu":32142,"popDen":123.1,"huDen":54.7,"score":0.985,"dist":5.1,"station":"DE_GEORGETOWN-SUSSEX","lat":38.65696,"lon":-75.44591}];
+
+const CLIMATES=["Cold & Very Cold","Hot-Dry & Mixed Dry","Hot-Humid","Marine","Mixed-Humid"];
+const URBS=["higher density urban","lower density urban","suburban/small town","rural"];
+const URB_SHORT={"higher density urban":"HDU","lower density urban":"LDU","suburban/small town":"Suburban","rural":"Rural"};
+const CCOLOR={"Cold & Very Cold":"var(--c-cold)","Hot-Dry & Mixed Dry":"var(--c-hotdry)","Hot-Humid":"var(--c-hothumid)","Marine":"var(--c-marine)","Mixed-Humid":"var(--c-mixed)"};
+const fmt=n=>n.toLocaleString('en-US');
+
+// state
+const state={
+  ctx:'map',
+  climate:new Set(CLIMATES),
+  urb:new Set(URBS),
+  scoreMin:0.70,
+  selected:DATA[5], // Phoenix to start
+  layers:{candidates:true,stations:true,links:true},
+  weights:{hu:0.45,dens:0.35,pop:0.20},
+  dirty:false,
+  sortKey:'score', sortDir:-1,
+  tableSel:new Set()
+};
+
+function filtered(){
+  return DATA.filter(d=>state.climate.has(d.climate)&&state.urb.has(d.urb)&&d.score>=state.scoreMin);
+}
+
+/* ---------- MAP projection ---------- */
+const LON0=-125,LON1=-66,LAT0=24,LAT1=50;
+function proj(lon,lat,w,h){return {x:(lon-LON0)/(LON1-LON0)*w, y:(LAT1-lat)/(LAT1-LAT0)*h};}
+
+function renderMap(){
+  const wrap=document.getElementById('mapcanvas'); if(!wrap)return;
+  const w=wrap.clientWidth||900,h=wrap.clientHeight||500;
+  const set=filtered();
+  let pts='';
+  set.forEach(d=>{
+    const p=proj(d.lon,d.lat,w,h);
+    const r=d.urb==='higher density urban'?9:d.urb==='lower density urban'?7:d.urb==='suburban/small town'?5.5:4.5;
+    const isSel=state.selected&&state.selected.code===d.code;
+    const fill=CCOLOR[d.climate];
+    if(state.layers.links){
+      const sp=proj(d.lon+ (d.dist/55), d.lat- (d.dist/120), w,h); // schematic station offset by distance
+      pts+=`<line x1="${p.x}" y1="${p.y}" x2="${sp.x}" y2="${sp.y}" stroke="#8a93a0" stroke-width="1" stroke-dasharray="3 3"/>`;
+      if(state.layers.stations) pts+=`<rect x="${sp.x-3}" y="${sp.y-3}" width="6" height="6" fill="#fff" stroke="#5b6470"/>`;
+    }
+    const shape = d.type==='County'
+      ? `<rect x="${p.x-r}" y="${p.y-r}" width="${2*r}" height="${2*r}" rx="1" fill="${fill}" stroke="${isSel?'#11161C':'#fff'}" stroke-width="${isSel?2.5:1.2}"/>`
+      : `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${isSel?'#11161C':'#fff'}" stroke-width="${isSel?2.5:1.2}"/>`;
+    pts+=`<g class="mpt" data-code="${d.code}" tabindex="0" role="button" aria-label="${d.label}" style="cursor:pointer">${shape}${isSel?`<circle cx="${p.x}" cy="${p.y}" r="${r+6}" fill="none" stroke="var(--accent)" stroke-width="2"/>`:''}</g>`;
+  });
+  wrap.innerHTML=`<svg class="map" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of selected catchments">
+     <rect x="0" y="0" width="${w}" height="${h}" fill="#E9EEF2"/>
+     <text x="14" y="${h-14}" font-size="11" fill="#aab2bc">schematic projection — continental U.S. footprint</text>
+     ${pts}
+   </svg>`;
+  wrap.querySelectorAll('.mpt').forEach(g=>{
+    g.addEventListener('click',()=>select(g.dataset.code));
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(g.dataset.code);}});
+  });
+}
+
+/* ---------- coverage matrix ---------- */
+function renderMatrix(){
+  const el=document.getElementById('matrix'); if(!el)return;
+  const set=filtered();
+  const idx={}; set.forEach(d=>idx[d.climate+'|'+d.urb]=d);
+  let html='<table class="matrix"><thead><tr><th></th>'+URBS.map(u=>`<th>${URB_SHORT[u]}</th>`).join('')+'</tr></thead><tbody>';
+  CLIMATES.forEach(c=>{
+    html+=`<tr><th style="text-align:left">${c}</th>`;
+    URBS.forEach(u=>{
+      const d=idx[c+'|'+u];
+      if(d){
+        const sel=state.selected&&state.selected.code===d.code;
+        html+=`<td><div class="cell" data-code="${d.code}" title="${d.label} — score ${d.score}" style="background:${CCOLOR[c]};${sel?'outline:2px solid var(--accent);outline-offset:-2px':''}">${d.score.toFixed(2)}</div></td>`;
+      } else {
+        html+=`<td><div class="cell" style="background:var(--surface-2);color:var(--text-muted);cursor:default">—</div></td>`;
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+  el.querySelectorAll('.cell[data-code]').forEach(c=>c.addEventListener('click',()=>select(c.dataset.code)));
+}
+
+/* ---------- distributions ---------- */
+function renderCharts(){
+  const set=filtered();
+  // score distribution buckets 0.70..1.00 in 6 bins
+  const sc=document.getElementById('scoreChart');
+  if(sc){
+    const bins=new Array(6).fill(0);
+    set.forEach(d=>{let b=Math.min(5,Math.floor((d.score-0.70)/0.05));if(b<0)b=0;bins[b]++;});
+    const max=Math.max(1,...bins);
+    sc.querySelector('.bars').innerHTML=bins.map(v=>`<div class="bar" style="height:${(v/max*100)||2}%" title="${v}"></div>`).join('');
+  }
+  const dc=document.getElementById('distChart');
+  if(dc){
+    const bins=new Array(6).fill(0);
+    set.forEach(d=>{let b=Math.min(5,Math.floor(d.dist/5));bins[b]++;});
+    const max=Math.max(1,...bins);
+    dc.querySelector('.bars').innerHTML=bins.map(v=>`<div class="bar" style="height:${(v/max*100)||2}%" title="${v}"></div>`).join('');
+  }
+}
+
+/* ---------- details drawer ---------- */
+function qualityFor(d){
+  const wx = d.dist>20 ? {cls:'warn',txt:'ISD '+(d.code==='29420'?'INCOMPLETE':'COMPLETE')} : {cls:'ok',txt:'ISD COMPLETE ≥90%'};
+  // one station out of 20 is <90% in the real run; show Lake Havasu as the example
+  const wxFinal = d.code==='29420' ? {cls:'warn',txt:'ISD INCOMPLETE <90%'} : {cls:'ok',txt:'ISD COMPLETE ≥90%'};
+  return wxFinal;
+}
+function select(code){
+  const d=DATA.find(x=>x.code===code); if(!d)return;
+  state.selected=d;
+  openDrawer(d);
+  renderMap();renderMatrix();
+  if(state.ctx==='catchments')renderCatchments();
+}
+function openDrawer(d){
+  const dr=document.getElementById('drawer');
+  document.getElementById('drKicker').textContent = d.type==='County'?'County catchment':'CBSA catchment';
+  document.getElementById('drTitle').textContent=d.label;
+  const q=qualityFor(d);
+  document.getElementById('drBody').innerHTML=`
+    <div class="sect">
+      <div class="st"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> ZIP / ZCTA</div>
+      <div class="kv">
+        <div>Example ZIP</div><div class="num">${d.code==='38060'?'85003':'—'}</div>
+        <div>ZCTA</div><div><span class="tag info">no ZCTA mapping</span></div>
+        <div>County / CBSA</div><div>${d.type==='County'?d.code+' (county)':d.code+' (CBSA)'}</div>
+      </div>
+      <div class="note">ZIP ≠ ZCTA. ZCTA is shown only when a relationship file resolves it; otherwise blank with this uncertainty note. Split ZIPs retained one-to-many with allocation ratios.</div>
+    </div>
+    <div class="sect">
+      <div class="st">Catchment</div>
+      <div class="kv">
+        <div>Stratum</div><div>${d.climate} · ${URB_SHORT[d.urb]}</div>
+        <div>Type</div><div>${d.type}${d.type==='County'?' (rural→county)':' (non-rural→CBSA)'}</div>
+        <div>Code</div><div class="num">${d.code}</div>
+        <div>Population</div><div class="num">${fmt(d.pop)}</div>
+        <div>Housing units</div><div class="num">${fmt(d.hu)}</div>
+        <div>Pop density</div><div class="num">${d.popDen}/mi²</div>
+        <div>HU density</div><div class="num">${d.huDen}/mi²</div>
+      </div>
+    </div>
+    <div class="sect">
+      <div class="st">Score components</div>
+      <div class="small muted">Composite ${d.score.toFixed(3)} = HU-coverage·0.45 + density·0.35 + pop-coverage·0.20</div>
+      <div style="margin-top:6px"><span class="small">Composite</span><div class="scorebar"><span style="width:${d.score*100}%"></span></div></div>
+      <div style="margin-top:6px"><span class="small">Housing-unit coverage (0.45)</span><div class="scorebar"><span style="width:${Math.min(100,d.score*100)}%"></span></div></div>
+      <div style="margin-top:6px"><span class="small">Population density (0.35)</span><div class="scorebar"><span style="width:${Math.min(100,(d.popDen/6400)*100)}%"></span></div></div>
+    </div>
+    <div class="sect">
+      <div class="st">Weather station</div>
+      <div class="kv">
+        <div>Station</div><div>${d.station}</div>
+        <div>Distance</div><div class="num">${d.dist} mi</div>
+        <div>QC</div><div><span class="tag ${q.cls}">${q.txt}</span></div>
+      </div>
+    </div>
+    <div class="sect">
+      <div class="st">ResStock filter</div>
+      <div class="kv">
+        <div>Scope</div><div>${d.type==='County'?'in.county = '+d.code:'in.metropolitan_and_micropolitan_statistical_area = '+d.code}</div>
+        <div>Verification</div><div><span class="tag ok">enumeration-verified</span></div>
+      </div>
+    </div>
+    <div class="sect">
+      <div class="st">Data quality</div>
+      <div class="rowflex" style="flex-wrap:wrap;gap:6px">
+        <span class="tag ok">ResStock verified</span>
+        <span class="tag ${q.cls}">${q.txt}</span>
+        <span class="tag info">crosswalk one-to-many noted</span>
+      </div>
+    </div>
+    <div class="sect">
+      <div class="st">Provenance</div>
+      <div class="small muted">ACS 2019–2023 5-year · 2023 Gazetteer · July 2023 CBSA delineation · NOAA ISD 2023 · TIGER/Line 2020.<br/>method_version 3.0-national-tract · data_mode production.</div>
+      <button class="small" style="margin-top:8px">Open in Methodology &amp; data →</button>
+    </div>`;
+  dr.classList.add('open');
+}
+document.getElementById('drClose').addEventListener('click',()=>document.getElementById('drawer').classList.remove('open'));
+
+/* ---------- contexts ---------- */
+function renderPanel(){
+  return `<aside class="panel" id="panel">
+    <div class="group">
+      <h3>Filters</h3>
+      <div class="field"><label>Climate region</label><div class="checks" id="fClimate">
+        ${CLIMATES.map(c=>`<label class="check"><input type="checkbox" data-c="${c}" ${state.climate.has(c)?'checked':''}/><span class="swatch" style="background:${CCOLOR[c]}"></span>${c}</label>`).join('')}
+      </div></div>
+      <div class="field"><label>Urbanicity</label><div class="checks" id="fUrb">
+        ${URBS.map(u=>`<label class="check"><input type="checkbox" data-u="${u}" ${state.urb.has(u)?'checked':''}/> ${URB_SHORT[u]}</label>`).join('')}
+      </div></div>
+      <div class="field"><label>Min score: <span class="num" id="scoreVal">${state.scoreMin.toFixed(2)}</span></label>
+        <input type="range" id="fScore" min="0.70" max="1.00" step="0.01" value="${state.scoreMin}"/></div>
+      <div class="field small muted">Also available: selected status · ResStock verification · weather-QC · station-distance range (omitted here for brevity).</div>
+    </div>
+    <div class="group">
+      <h3>Scenario · Baseline</h3>
+      <div class="small muted">Weights Σ=1.00 · HU .45 / Dens .35 / Pop .20</div>
+      <div class="field" style="margin-top:8px"><label>Density screen</label>
+        <select><option>Include all candidates</option><option>≥ stratum median density</option></select></div>
+      <label class="check"><input type="checkbox" checked/> Unique catchment per stratum</label>
+      <label class="check"><input type="checkbox" checked/> Require weather QC ≥ 90%</label>
+      <label class="check"><input type="checkbox"/> Prefer Pennsylvania (research priority)</label>
+      <div class="rowflex" style="margin-top:10px"><button class="btn-accent" data-go="scenario">Open scenario workbench</button></div>
+    </div>
+  </aside>`;
+}
+function wirePanel(){
+  const p=document.getElementById('panel'); if(!p)return;
+  p.querySelectorAll('#fClimate input').forEach(i=>i.addEventListener('change',()=>{i.checked?state.climate.add(i.dataset.c):state.climate.delete(i.dataset.c);refreshData();}));
+  p.querySelectorAll('#fUrb input').forEach(i=>i.addEventListener('change',()=>{i.checked?state.urb.add(i.dataset.u):state.urb.delete(i.dataset.u);refreshData();}));
+  const s=p.querySelector('#fScore'); if(s)s.addEventListener('input',()=>{state.scoreMin=parseFloat(s.value);document.getElementById('scoreVal').textContent=state.scoreMin.toFixed(2);refreshData();});
+  p.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchCtx(b.dataset.go)));
+}
+function refreshData(){renderMap();renderMatrix();renderCharts();if(state.ctx==='catchments')renderCatchments();}
+
+function ctxMap(){
+  return `<div class="ws">
+    ${renderPanel()}
+    <div class="stage">
+      <div class="mapwrap">
+        <div id="mapcanvas" style="position:absolute;inset:0"></div>
+        <div class="layers">
+          <strong style="font-size:11px">Layers</strong>
+          <label class="check"><input type="checkbox" id="lyCand" checked/> Candidates</label>
+          <label class="check"><input type="checkbox" id="lySt" checked/> Weather stations</label>
+          <label class="check"><input type="checkbox" id="lyLink" checked/> Station-distance links</label>
+        </div>
+        <div class="map-ctrls">
+          <button title="Zoom in">+</button><button title="Zoom out">−</button>
+          <button title="Basemap"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 9 4-9 4-9-4z"/><path d="m3 12 9 4 9-4M3 17l9 4 9-4"/></svg></button>
+          <button title="Zoom to selection"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg></button>
+        </div>
+        <div class="legend">
+          <strong style="font-size:11px">Climate region</strong>
+          ${CLIMATES.map(c=>`<div class="row"><span class="swatch" style="width:11px;height:11px;border-radius:2px;background:${CCOLOR[c]}"></span>${c}</div>`).join('')}
+          <div class="row" style="margin-top:5px"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#999"/></svg> CBSA · <svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="#999"/></svg> County · size = urbanicity</div>
+        </div>
+        <div class="attr">© schematic · production © MapLibre / OpenStreetMap contributors</div>
+      </div>
+      <div class="strip">
+        <div><h4>Stratum coverage (5 × 4)</h4><div id="matrix"></div></div>
+        <div id="scoreChart"><h4>Score distribution</h4><div class="bars"></div><div class="axis"><span>0.70</span><span>1.00</span></div></div>
+        <div id="distChart"><h4>Station distance (mi)</h4><div class="bars"></div><div class="axis"><span>0</span><span>30+</span></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function sortData(set){
+  const k=state.sortKey,dir=state.sortDir;
+  return [...set].sort((a,b)=>{let x=a[k],y=b[k];if(typeof x==='string'){return x.localeCompare(y)*dir;}return (x-y)*dir;});
+}
+function renderCatchments(){
+  const host=document.getElementById('tbody'); if(!host)return;
+  const set=sortData(filtered());
+  host.innerHTML=set.map(d=>`<tr class="${state.selected&&state.selected.code===d.code?'sel':''}" data-code="${d.code}">
+    <td><input type="checkbox" data-code="${d.code}" ${state.tableSel.has(d.code)?'checked':''}/></td>
+    <td>${d.climate}</td><td>${URB_SHORT[d.urb]}</td><td>${d.label}</td><td>${d.type}</td>
+    <td class="rt num">${d.score.toFixed(3)}</td><td class="rt num">${fmt(d.pop)}</td><td class="rt num">${fmt(d.hu)}</td>
+    <td class="rt num">${d.popDen}</td><td class="rt num">${d.dist}</td>
+    <td><span class="tag ok" style="font-size:10px">verified</span></td></tr>`).join('');
+  host.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',e=>{if(e.target.tagName==='INPUT')return;select(tr.dataset.code);}));
+  host.querySelectorAll('input[type=checkbox]').forEach(c=>c.addEventListener('change',()=>{c.checked?state.tableSel.add(c.dataset.code):state.tableSel.delete(c.dataset.code);document.getElementById('selCount').textContent=state.tableSel.size;}));
+}
+function ctxCatchments(){
+  return `<div style="display:grid;grid-template-columns:320px 1fr;height:100%">
+    ${renderPanel()}
+    <div class="tablewrap">
+      <div class="pagehead"><div><div class="kicker">Catchments</div><h2>Candidate ranking</h2></div>
+        <div class="rowflex"><span class="small muted"><span id="selCount">0</span> selected for compare</span><button data-go="compare">Compare selected →</button><button>Export ranking CSV</button></div></div>
+      <table class="grid"><thead><tr>
+        <th></th>
+        <th data-k="climate">Climate ▴▾</th><th data-k="urb">Urb</th><th data-k="label">Catchment</th><th data-k="type">Type</th>
+        <th class="rt" data-k="score">Score</th><th class="rt" data-k="pop">Pop</th><th class="rt" data-k="hu">Housing</th>
+        <th class="rt" data-k="popDen">Pop dens</th><th class="rt" data-k="dist">Stn mi</th><th>ResStock</th>
+      </tr></thead><tbody id="tbody"></tbody></table>
+    </div></div>`;
+}
+
+function ctxCompare(){
+  const set=filtered();
+  const baseTop=[...DATA].sort((a,b)=>b.score-a.score).slice(0,5);
+  return `<div class="compare">
+    <div><div class="kicker">Baseline allocation</div><h2 style="margin-bottom:8px">Independent top-ranked</h2>
+      <p class="muted small">Top representative per stratum from the unconstrained score. Map diff would emphasize changed assignments.</p>
+      <table class="grid"><thead><tr><th>Stratum</th><th>Catchment</th><th class="rt">Score</th></tr></thead><tbody>
+      ${baseTop.map(d=>`<tr><td>${d.climate} · ${URB_SHORT[d.urb]}</td><td>${d.label}</td><td class="rt num">${d.score.toFixed(3)}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div><div class="kicker">Active scenario</div><h2 style="margin-bottom:8px">Baseline · uniqueness + weather-QC on</h2>
+      <p class="muted small">Quantified deltas vs the independent allocation; every change carries a reason.</p>
+      <table class="grid"><thead><tr><th>Stratum</th><th>Δ score</th><th>Change &amp; reason</th></tr></thead><tbody>
+        <tr><td>Marine · HDU</td><td class="num delta-neg">−0.000</td><td>No change — Pullman retained</td></tr>
+        <tr><td>Hot-Dry · Suburban</td><td class="num delta-neg">−0.012</td><td>Substituted: prior pick failed weather-QC ≥90%</td></tr>
+        <tr><td>Mixed-Humid · HDU</td><td class="num delta-pos">+0.000</td><td>No change — Warren, PA retained</td></tr>
+        <tr><td colspan="3" class="muted small">Coverage Δ: 20/20 strata represented · distinct catchments enforced · 1 substitution.</td></tr>
+      </tbody></table></div>
+  </div>`;
+}
+
+function ctxScenario(){
+  const w=state.weights, sum=(w.hu+w.dens+w.pop);
+  return `<div class="scenario">
+    <div class="work">
+      <div class="kicker">Scenario workbench</div><h2 style="margin-bottom:10px">Baseline</h2>
+      <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.04em">Composite weights</h3>
+      <div class="weightrow"><span>Housing-unit cov</span><input type="range" id="wHu" min="0" max="1" step="0.01" value="${w.hu}"/><span class="num" id="wHuV">${w.hu.toFixed(2)}</span></div>
+      <div class="weightrow"><span>Population density</span><input type="range" id="wDens" min="0" max="1" step="0.01" value="${w.dens}"/><span class="num" id="wDensV">${w.dens.toFixed(2)}</span></div>
+      <div class="weightrow"><span>Population cov</span><input type="range" id="wPop" min="0" max="1" step="0.01" value="${w.pop}"/><span class="num" id="wPopV">${w.pop.toFixed(2)}</span></div>
+      <div class="small" id="wSum">Σ = <span class="${Math.abs(sum-1)<1e-9?'sum-ok':'sum-bad'}">${sum.toFixed(2)}</span> ${Math.abs(sum-1)<1e-9?'✓ valid':'— must equal 1.00 to save'}</div>
+      <button class="small" id="wNorm" style="margin-top:6px">Normalize to 1.00</button>
+      <div class="group" style="border:0;margin-top:14px;padding:0">
+        <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.04em">Constraints</h3>
+        <div class="field"><label>Density screen</label><select><option>Include all candidates</option><option>≥ stratum median density</option></select></div>
+        <div class="field"><label>Max station distance (mi)</label><input type="number" value="25" style="width:90px"/></div>
+        <div class="field"><label>Station-distance penalty</label><input type="range" min="0" max="1" step="0.05" value="0.2"/></div>
+        <label class="check"><input type="checkbox" checked/> Unique catchment per stratum</label>
+        <label class="check"><input type="checkbox" checked/> Require weather QC ≥ 90%</label>
+        <label class="check"><input type="checkbox"/> Prefer Pennsylvania (research priority)</label>
+      </div>
+      <div class="rowflex" style="margin-top:14px">
+        <button class="btn-accent" id="scnPreview">Preview</button>
+        <button id="scnSave">Save ▾</button>
+        <button id="scnShare">Share</button>
+      </div>
+    </div>
+    <div class="preview">
+      <div class="kicker">Live preview</div><h2 style="margin-bottom:6px">Scenario result</h2>
+      <p class="muted small">Calls <span class="num">POST /api/v1/scenarios/evaluate</span>. Save writes a versioned scenario; Share copies the URL-encoded state.</p>
+      <div class="metricgrid">
+        <div class="metric"><div class="v num">20 / 20</div><div class="l">Strata represented</div></div>
+        <div class="metric"><div class="v num">3,939</div><div class="l">Eligible candidates</div></div>
+        <div class="metric"><div class="v num">0.967</div><div class="l">Mean combined score</div></div>
+        <div class="metric"><div class="v num">1</div><div class="l">Changed assignments</div></div>
+      </div>
+      <div class="note" style="margin-top:12px"><strong>Mapping cautions:</strong> 1 station &lt; 90% weather completeness (Lake Havasu City–Kingman); split-ZIP one-to-many retained; ZIP ≠ ZCTA where unmapped.</div>
+    </div>
+  </div>`;
+}
+function wireScenario(){
+  const norm=()=>{const w=state.weights;const s=w.hu+w.dens+w.pop;if(s>0){w.hu=+(w.hu/s).toFixed(2);w.dens=+(w.dens/s).toFixed(2);w.pop=+(1-w.hu-w.dens).toFixed(2);}switchCtx('scenario');};
+  const upd=()=>{const w=state.weights;const s=+(w.hu+w.dens+w.pop).toFixed(2);
+    document.getElementById('wHuV').textContent=w.hu.toFixed(2);document.getElementById('wDensV').textContent=w.dens.toFixed(2);document.getElementById('wPopV').textContent=w.pop.toFixed(2);
+    document.getElementById('wSum').innerHTML='Σ = <span class="'+(Math.abs(s-1)<1e-9?'sum-ok':'sum-bad')+'">'+s.toFixed(2)+'</span> '+(Math.abs(s-1)<1e-9?'✓ valid':'— must equal 1.00 to save');
+    setDirty(true);};
+  ['wHu','wDens','wPop'].forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('input',()=>{state.weights[id.replace('w','').toLowerCase()==='hu'?'hu':id==='wDens'?'dens':'pop']=parseFloat(e.value);upd();});});
+  const nb=document.getElementById('wNorm'); if(nb)nb.addEventListener('click',norm);
+  const pv=document.getElementById('scnPreview'); if(pv)pv.addEventListener('click',()=>toast('Preview recomputed (scenarios/evaluate)'));
+  const sv=document.getElementById('scnSave'); if(sv)sv.addEventListener('click',()=>{setDirty(false);toast('Scenario saved as v2');});
+  const sh=document.getElementById('scnShare'); if(sh)sh.addEventListener('click',()=>toast('URL-encoded scenario copied'));
+}
+
+function ctxMethodology(){
+  return `<div class="doc">
+    <div class="kicker">Methodology &amp; data</div>
+    <h1 style="font-size:26px;margin:4px 0 12px">How ReplocX selects representative locations</h1>
+    <p>National tract-derived selection. 84,080 census tracts classified, then aggregated: <strong>rural tracts → counties</strong>, <strong>non-rural tracts → CBSAs</strong>. One catchment is selected per stratum across <strong>5 climate regions × 4 urbanicity categories = 20 strata</strong>.</p>
+    <h2>Vintage</h2>
+    <table><tr><th>Input</th><th>Source / vintage</th></tr>
+      <tr><td>Tract boundaries</td><td>2020 Census tracts (TIGER/Line)</td></tr>
+      <tr><td>Population &amp; housing</td><td>ACS 2019–2023 5-year</td></tr>
+      <tr><td>Land area / interior point</td><td>2023 Census Gazetteer</td></tr>
+      <tr><td>CBSA delineation</td><td>Census/OMB July 2023 (2020 standards)</td></tr>
+      <tr><td>Weather</td><td>NOAA ISD 2023 global-hourly</td></tr>
+    </table>
+    <h2>Scoring</h2>
+    <p>Deterministic composite: housing-unit coverage <strong>0.45</strong> + population density <strong>0.35</strong> + population coverage <strong>0.20</strong> (weights sum to 1.0). Min-cost allocation enforces distinct catchments when uniqueness is on.</p>
+    <h2>Data quality &amp; limitations</h2>
+    <ul>
+      <li>Weather QC: 19 / 20 assigned stations ≥ 90% hourly completeness (leap-aware). The exception is flagged, not hidden.</li>
+      <li>ResStock/ComStock: 20 / 20 selected codes verified against the real data dictionary; others marked <span class="tag warn">REVIEW REQUIRED</span>.</li>
+      <li>HUD ZIP crosswalk: split ZIPs retained one-to-many with allocation ratios. <strong>ZIP ≠ ZCTA</strong> — ZCTA only when a relationship file resolves it.</li>
+      <li>918 non-rural tract join losses (counties absent from the CBSA delineation) are reported in <span class="num">national_report.json</span>, not dropped silently.</li>
+      <li>Geometry: simplified TIGER/Line cartographic boundaries (Douglas–Peucker, MultiPolygon-aware).</li>
+    </ul>
+    <h2>Dissertation comparison</h2>
+    <p>This run is intentionally distinct from the dissertation's boundary-consistent 2010 tract basis; differences are explained by data vintage, boundary definitions, classification, and scoring rather than forced to agree.</p>
+    <h2>API &amp; exports</h2>
+    <p><span class="num">/api/v1/health · /dashboard · /geometry · /candidates · /provenance · /scenarios · /scenarios/evaluate</span>. Exports: site-list CSV, ResStock-sampling CSV, OpenStudio manifest JSON, scenario JSON, ranking CSV, map image. <a href="#">OpenAPI</a>.</p>
+  </div>`;
+}
+
+/* ---------- context switching ---------- */
+function switchCtx(c){
+  state.ctx=c;
+  document.querySelectorAll('.nav button[data-ctx]').forEach(b=>b.classList.toggle('active',b.dataset.ctx===c));
+  document.getElementById('filtToggle').classList.toggle('hidden', !(c==='map'||c==='catchments'));
+  const host=document.getElementById('ctx');
+  if(c==='map'){host.innerHTML=ctxMap();renderMap();renderMatrix();renderCharts();wirePanel();}
+  else if(c==='catchments'){host.innerHTML=ctxCatchments();wirePanel();renderCatchments();wireSort();}
+  else if(c==='compare'){host.innerHTML=ctxCompare();wireGo();}
+  else if(c==='scenario'){host.innerHTML=ctxScenario();wireScenario();}
+  else if(c==='methodology'){host.innerHTML=ctxMethodology();}
+}
+function wireSort(){document.querySelectorAll('table.grid thead th[data-k]').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(state.sortKey===k)state.sortDir*=-1;else{state.sortKey=k;state.sortDir=k==='label'||k==='climate'||k==='type'?1:-1;}renderCatchments();}));}
+function wireGo(){document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>switchCtx(b.dataset.go)));}
+
+document.querySelectorAll('.nav button[data-ctx]').forEach(b=>b.addEventListener('click',()=>switchCtx(b.dataset.ctx)));
+
+/* ---------- top bar wiring ---------- */
+function setDirty(d){state.dirty=d;document.getElementById('scnDot').className='dot '+(d?'dirty':'saved');document.getElementById('scnName').textContent='Baseline · '+(d?'edited':'saved');}
+document.getElementById('exportBtn').addEventListener('click',()=>document.getElementById('exportMenu').classList.toggle('hidden'));
+document.addEventListener('click',e=>{if(!e.target.closest('.menu'))document.getElementById('exportMenu').classList.add('hidden');});
+document.getElementById('search').addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const q=e.target.value.trim().toLowerCase();
+  const hit=DATA.find(d=>d.code.toLowerCase()===q||d.label.toLowerCase().includes(q)||d.station.toLowerCase().includes(q));
+  if(hit){if(state.ctx!=='map')switchCtx('map');select(hit.code);toast('Found: '+hit.label);}
+  else toast('No catchment/ZIP/station match (demo data is the 20 selected)');
+});
+document.getElementById('filtToggle').addEventListener('click',()=>{const p=document.getElementById('panel');if(p)p.classList.toggle('show');});
+
+// layer toggles delegated
+document.addEventListener('change',e=>{
+  if(e.target.id==='lyCand'){state.layers.candidates=e.target.checked;renderMap();}
+  if(e.target.id==='lySt'){state.layers.stations=e.target.checked;renderMap();}
+  if(e.target.id==='lyLink'){state.layers.links=e.target.checked;renderMap();}
+});
+
+let toastT;
+function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--text);color:#fff;padding:8px 14px;border-radius:6px;box-shadow:var(--shadow);z-index:80;font-size:13px';document.body.appendChild(t);}t.textContent=msg;t.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity='0',1800);}
+
+window.addEventListener('resize',()=>{if(state.ctx==='map')renderMap();});
+switchCtx('map');
+openDrawer(state.selected);
+</script>
+</body>
+</html>

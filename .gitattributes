@@ -1,0 +1,9 @@
+# Generated analytical CSV outputs are written by the Python csv module, which
+# uses CRLF ("\r\n") as its default line terminator. The CRLF is intentional and
+# reproducible (CI regenerates these files identically). Preserve the bytes
+# verbatim and skip git's trailing-whitespace check so `git diff --check` does
+# not flag the carriage returns.
+data/demo/*.csv -text -whitespace
+pipeline/out/*.csv -text -whitespace
+pipeline/data/*.csv -text -whitespace
+pipeline/data/pilot/*.csv -text -whitespace

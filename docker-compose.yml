@@ -1,0 +1,9 @@
+services:
+  explorer:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      RLE_ANALYSIS_DATA_DIR: /analysis
+    volumes:
+      - ../../location_selection/data/processed:/analysis:ro

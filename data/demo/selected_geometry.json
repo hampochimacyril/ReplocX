@@ -1,0 +1,929 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "source": "fixture",
+    "note": "Synthetic placeholder polygons (offline fixture)."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "10000",
+        "catchment_label": "Cold & Very Cold HDU catchment 1 (demo)",
+        "climate_region": "Cold & Very Cold",
+        "urbanicity_short": "HDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -92.26853,
+              44.26
+            ],
+            [
+              -93.11,
+              44.61
+            ],
+            [
+              -93.95147,
+              44.26
+            ],
+            [
+              -93.95147,
+              43.56
+            ],
+            [
+              -93.11,
+              43.21
+            ],
+            [
+              -92.26853,
+              43.56
+            ],
+            [
+              -92.26853,
+              44.26
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "10148",
+        "catchment_label": "Cold & Very Cold LDU catchment 1 (demo)",
+        "climate_region": "Cold & Very Cold",
+        "urbanicity_short": "LDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -92.00772,
+              45.01
+            ],
+            [
+              -92.86,
+              45.36
+            ],
+            [
+              -93.71228,
+              45.01
+            ],
+            [
+              -93.71228,
+              44.31
+            ],
+            [
+              -92.86,
+              43.96
+            ],
+            [
+              -92.00772,
+              44.31
+            ],
+            [
+              -92.00772,
+              45.01
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "10296",
+        "catchment_label": "Cold & Very Cold Suburban catchment 1 (demo)",
+        "climate_region": "Cold & Very Cold",
+        "urbanicity_short": "Suburban",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -91.48675,
+              43.67
+            ],
+            [
+              -92.32,
+              44.02
+            ],
+            [
+              -93.15325,
+              43.67
+            ],
+            [
+              -93.15325,
+              42.97
+            ],
+            [
+              -92.32,
+              42.62
+            ],
+            [
+              -91.48675,
+              42.97
+            ],
+            [
+              -91.48675,
+              43.67
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "County",
+        "catchment_code": "10444",
+        "catchment_label": "Cold & Very Cold Rural catchment 1 (demo)",
+        "climate_region": "Cold & Very Cold",
+        "urbanicity_short": "Rural",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -93.39557,
+              45.345
+            ],
+            [
+              -94.07,
+              45.62
+            ],
+            [
+              -94.74443,
+              45.345
+            ],
+            [
+              -94.74443,
+              44.795
+            ],
+            [
+              -94.07,
+              44.52
+            ],
+            [
+              -93.39557,
+              44.795
+            ],
+            [
+              -93.39557,
+              45.345
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "10592",
+        "catchment_label": "Hot-Dry & Mixed Dry HDU catchment 1 (demo)",
+        "climate_region": "Hot-Dry & Mixed Dry",
+        "urbanicity_short": "HDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -111.39116,
+              34.07
+            ],
+            [
+              -112.12,
+              34.42
+            ],
+            [
+              -112.84884,
+              34.07
+            ],
+            [
+              -112.84884,
+              33.37
+            ],
+            [
+              -112.12,
+              33.02
+            ],
+            [
+              -111.39116,
+              33.37
+            ],
+            [
+              -111.39116,
+              34.07
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "10740",
+        "catchment_label": "Hot-Dry & Mixed Dry LDU catchment 1 (demo)",
+        "climate_region": "Hot-Dry & Mixed Dry",
+        "urbanicity_short": "LDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -110.74808,
+              34.43
+            ],
+            [
+              -111.48,
+              34.78
+            ],
+            [
+              -112.21192,
+              34.43
+            ],
+            [
+              -112.21192,
+              33.73
+            ],
+            [
+              -111.48,
+              33.38
+            ],
+            [
+              -110.74808,
+              33.73
+            ],
+            [
+              -110.74808,
+              34.43
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "10888",
+        "catchment_label": "Hot-Dry & Mixed Dry Suburban catchment 1 (demo)",
+        "climate_region": "Hot-Dry & Mixed Dry",
+        "urbanicity_short": "Suburban",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -110.6061,
+              33.48
+            ],
+            [
+              -111.33,
+              33.83
+            ],
+            [
+              -112.0539,
+              33.48
+            ],
+            [
+              -112.0539,
+              32.78
+            ],
+            [
+              -111.33,
+              32.43
+            ],
+            [
+              -110.6061,
+              32.78
+            ],
+            [
+              -110.6061,
+              33.48
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "County",
+        "catchment_code": "11036",
+        "catchment_label": "Hot-Dry & Mixed Dry Rural catchment 1 (demo)",
+        "climate_region": "Hot-Dry & Mixed Dry",
+        "urbanicity_short": "Rural",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -112.49938,
+              35.155
+            ],
+            [
+              -113.08,
+              35.43
+            ],
+            [
+              -113.66062,
+              35.155
+            ],
+            [
+              -113.66062,
+              34.605
+            ],
+            [
+              -113.08,
+              34.33
+            ],
+            [
+              -112.49938,
+              34.605
+            ],
+            [
+              -112.49938,
+              35.155
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "11184",
+        "catchment_label": "Hot-Humid HDU catchment 1 (demo)",
+        "climate_region": "Hot-Humid",
+        "urbanicity_short": "HDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -89.33901,
+              30.49
+            ],
+            [
+              -90.04,
+              30.84
+            ],
+            [
+              -90.74099,
+              30.49
+            ],
+            [
+              -90.74099,
+              29.79
+            ],
+            [
+              -90.04,
+              29.44
+            ],
+            [
+              -89.33901,
+              29.79
+            ],
+            [
+              -89.33901,
+              30.49
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "11332",
+        "catchment_label": "Hot-Humid LDU catchment 1 (demo)",
+        "climate_region": "Hot-Humid",
+        "urbanicity_short": "LDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -89.08358,
+              31.24
+            ],
+            [
+              -89.79,
+              31.59
+            ],
+            [
+              -90.49642,
+              31.24
+            ],
+            [
+              -90.49642,
+              30.54
+            ],
+            [
+              -89.79,
+              30.19
+            ],
+            [
+              -89.08358,
+              30.54
+            ],
+            [
+              -89.08358,
+              31.24
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "11480",
+        "catchment_label": "Hot-Humid Suburban catchment 1 (demo)",
+        "climate_region": "Hot-Humid",
+        "urbanicity_short": "Suburban",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -88.55314,
+              29.9
+            ],
+            [
+              -89.25,
+              30.25
+            ],
+            [
+              -89.94686,
+              29.9
+            ],
+            [
+              -89.94686,
+              29.2
+            ],
+            [
+              -89.25,
+              28.85
+            ],
+            [
+              -88.55314,
+              29.2
+            ],
+            [
+              -88.55314,
+              29.9
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "County",
+        "catchment_code": "11628",
+        "catchment_label": "Hot-Humid Rural catchment 1 (demo)",
+        "climate_region": "Hot-Humid",
+        "urbanicity_short": "Rural",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -90.44255,
+              31.575
+            ],
+            [
+              -91.0,
+              31.85
+            ],
+            [
+              -91.55745,
+              31.575
+            ],
+            [
+              -91.55745,
+              31.025
+            ],
+            [
+              -91.0,
+              30.75
+            ],
+            [
+              -90.44255,
+              31.025
+            ],
+            [
+              -90.44255,
+              31.575
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "11776",
+        "catchment_label": "Marine HDU catchment 1 (demo)",
+        "climate_region": "Marine",
+        "urbanicity_short": "HDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -121.65354,
+              47.8
+            ],
+            [
+              -122.55,
+              48.15
+            ],
+            [
+              -123.44646,
+              47.8
+            ],
+            [
+              -123.44646,
+              47.1
+            ],
+            [
+              -122.55,
+              46.75
+            ],
+            [
+              -121.65354,
+              47.1
+            ],
+            [
+              -121.65354,
+              47.8
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "11924",
+        "catchment_label": "Marine LDU catchment 1 (demo)",
+        "climate_region": "Marine",
+        "urbanicity_short": "LDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -121.00734,
+              48.16
+            ],
+            [
+              -121.91,
+              48.51
+            ],
+            [
+              -122.81266,
+              48.16
+            ],
+            [
+              -122.81266,
+              47.46
+            ],
+            [
+              -121.91,
+              47.11
+            ],
+            [
+              -121.00734,
+              47.46
+            ],
+            [
+              -121.00734,
+              48.16
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "12072",
+        "catchment_label": "Marine Suburban catchment 1 (demo)",
+        "climate_region": "Marine",
+        "urbanicity_short": "Suburban",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -120.87344,
+              47.21
+            ],
+            [
+              -121.76,
+              47.56
+            ],
+            [
+              -122.64656,
+              47.21
+            ],
+            [
+              -122.64656,
+              46.51
+            ],
+            [
+              -121.76,
+              46.16
+            ],
+            [
+              -120.87344,
+              46.51
+            ],
+            [
+              -120.87344,
+              47.21
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "County",
+        "catchment_code": "12220",
+        "catchment_label": "Marine Rural catchment 1 (demo)",
+        "climate_region": "Marine",
+        "urbanicity_short": "Rural",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -122.40511,
+              48.495
+            ],
+            [
+              -123.12,
+              48.77
+            ],
+            [
+              -123.83489,
+              48.495
+            ],
+            [
+              -123.83489,
+              47.945
+            ],
+            [
+              -123.12,
+              47.67
+            ],
+            [
+              -122.40511,
+              47.945
+            ],
+            [
+              -122.40511,
+              48.495
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "37980",
+        "catchment_label": "Philadelphia-Camden-Wilmington, PA-NJ-DE-MD (demo)",
+        "climate_region": "Mixed-Humid",
+        "urbanicity_short": "HDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -79.82431,
+              38.95
+            ],
+            [
+              -80.6,
+              39.3
+            ],
+            [
+              -81.37569,
+              38.95
+            ],
+            [
+              -81.37569,
+              38.25
+            ],
+            [
+              -80.6,
+              37.9
+            ],
+            [
+              -79.82431,
+              38.25
+            ],
+            [
+              -79.82431,
+              38.95
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "12516",
+        "catchment_label": "Mixed-Humid LDU catchment 1 (demo)",
+        "climate_region": "Mixed-Humid",
+        "urbanicity_short": "LDU",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -79.53639,
+              39.67
+            ],
+            [
+              -80.32,
+              40.02
+            ],
+            [
+              -81.10361,
+              39.67
+            ],
+            [
+              -81.10361,
+              38.97
+            ],
+            [
+              -80.32,
+              38.62
+            ],
+            [
+              -79.53639,
+              38.97
+            ],
+            [
+              -79.53639,
+              39.67
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "CBSA",
+        "catchment_code": "12664",
+        "catchment_label": "Mixed-Humid Suburban catchment 1 (demo)",
+        "climate_region": "Mixed-Humid",
+        "urbanicity_short": "Suburban",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -79.01091,
+              38.33
+            ],
+            [
+              -79.78,
+              38.68
+            ],
+            [
+              -80.54909,
+              38.33
+            ],
+            [
+              -80.54909,
+              37.63
+            ],
+            [
+              -79.78,
+              37.28
+            ],
+            [
+              -79.01091,
+              37.63
+            ],
+            [
+              -79.01091,
+              38.33
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "catchment_type": "County",
+        "catchment_code": "12812",
+        "catchment_label": "Mixed-Humid Rural catchment 1 (demo)",
+        "climate_region": "Mixed-Humid",
+        "urbanicity_short": "Rural",
+        "geometry_kind": "synthetic"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.91066,
+              40.005
+            ],
+            [
+              -81.53,
+              40.28
+            ],
+            [
+              -82.14934,
+              40.005
+            ],
+            [
+              -82.14934,
+              39.455
+            ],
+            [
+              -81.53,
+              39.18
+            ],
+            [
+              -80.91066,
+              39.455
+            ],
+            [
+              -80.91066,
+              40.005
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

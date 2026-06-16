@@ -1,0 +1,46 @@
+# Marketing assets
+
+Promotional material for ReplocX. Nothing here uses
+private research data — all visuals reference the synthetic demo and the method.
+
+## Files
+
+- **`ReplocX_demo_app_narrated.mp4`** *(optional local export, ignored until
+  reviewed/staged)* — narrated application demo using synthetic data.
+
+- **`ReplocX_demo_promo_narrated.mp4`** *(optional local export, ignored until
+  reviewed/staged)* — narrated promotional cut using synthetic data.
+
+- **`promo.html`** — a self-running ~60-second product tour with 3D-style motion,
+  on-screen captions, a soft ambient music bed, and **spoken narration** using your
+  device's built-in voices. Open it in a browser and click **▶ Play with narration**.
+  - Best on macOS (Safari/Chrome) where the system voices are high quality. To pick
+    a premium voice, set it in System Settings → Accessibility → Spoken Content →
+    System Voice (e.g. "Ava", "Samantha") before playing.
+  - **To produce a voiced MP4:** screen-record the browser window while it plays
+    (QuickTime → File → New Screen Recording, capture system audio), or use a tool
+    like Descript/CapCut. This gives you a shareable, narrated video.
+
+- **`promo.mp4`** — a rendered 1600×900 motion-graphics video (~53s, H.264 + AAC)
+  with an ambient music bed and **no voice**, ready to upload directly to
+  LinkedIn / X / a landing page. Add narration from `VO_script.md` if you want voice.
+
+- **`VO_script.md`** — the timed voiceover script + a one-take continuous version
+  for ElevenLabs / Descript / Murf, plus caption lines.
+
+- **`generate_promo_video.py`** — regenerates `promo.mp4` (pure Python + ffmpeg):
+  ```bash
+  pip install pillow numpy
+  python3 generate_promo_video.py
+  ```
+
+## Recommended path to a "studio" version
+
+1. Open `promo.html`, confirm timing/voice you like.
+2. For broadcast-quality voice, paste the continuous script from `VO_script.md`
+   into ElevenLabs, export the audio, and lay it over `promo.mp4` in any editor
+   (the scene timings in `VO_script.md` line up with the MP4).
+3. Export 1080p H.264 and publish.
+
+> Note: the videos are "3D-style" motion graphics (depth, parallax, CSS-3D tilt in
+> the HTML). They are not a real-time 3D engine render.

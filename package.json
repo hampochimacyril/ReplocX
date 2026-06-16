@@ -1,0 +1,21 @@
+{
+  "name": "replocx",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "ReplocX: transparent representative U.S. location selection.",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "test:unit": "npm --prefix frontend run test",
+    "test:frontend:syntax": "npm --prefix frontend run typecheck",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "verify:python": "python3 -m unittest discover -s tests -v"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  }
+}

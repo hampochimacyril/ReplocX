@@ -1,0 +1,24 @@
+{
+  "api": {
+    "endpoint": "https://www.huduser.gov/hudapi/public/usps",
+    "geographic_scope": "50 states and District of Columbia; U.S. territories excluded.",
+    "note": "ZIP-COUNTY rows retained one-to-many; primary CBSA from ZIP-CBSA (highest residential ratio).",
+    "types": {
+      "cbsa": 3,
+      "county": 2
+    }
+  },
+  "distinct_zip_count": 39299,
+  "generated_at_utc": "2026-06-07T21:04:46.571317+00:00",
+  "one_to_many_zip_count": 11303,
+  "quarter": "Q1 2025",
+  "row_count": 54242,
+  "source": "api",
+  "zcta_resolved": true,
+  "zip_zcta_file": {
+    "bytes": 656861,
+    "file": "pipeline/cache/live_inputs/zip_to_zcta_2022.csv",
+    "read_at_utc": "2026-06-07T21:04:46.572776+00:00",
+    "sha256": "75d0397c6b1c6647005d09b70be2cc42baaf642fccbc4e212134b97370aff86c"
+  }
+}

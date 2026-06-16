@@ -1,0 +1,5 @@
+{"data": {"year": "2025", "quarter": "1", "results": [
+  {"zip": "19104", "geoid": "42101", "res_ratio": 1.0, "bus_ratio": 1.0, "oth_ratio": 1.0, "tot_ratio": 1.0, "city": "PHILADELPHIA", "state": "PA", "usps_zip_pref_city": "PHILADELPHIA", "usps_zip_pref_state": "PA", "countyname": "Philadelphia"},
+  {"zip": "63143", "geoid": "29189", "res_ratio": 0.7, "bus_ratio": 0.6, "oth_ratio": 0.5, "tot_ratio": 0.68, "city": "SAINT LOUIS", "state": "MO", "usps_zip_pref_state": "MO", "countyname": "St. Louis"},
+  {"zip": "63143", "geoid": "29510", "res_ratio": 0.3, "bus_ratio": 0.4, "oth_ratio": 0.5, "tot_ratio": 0.32, "city": "SAINT LOUIS", "state": "MO", "usps_zip_pref_state": "MO", "countyname": "St. Louis city"}
+]}}

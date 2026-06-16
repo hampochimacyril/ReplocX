@@ -1,0 +1,31 @@
+# Render blueprint — one-click public deploy of ReplocX.
+#
+# Uses the Docker runtime so the multi-stage Dockerfile builds the React/Vite
+# frontend (Node stage) and serves it from the Python image. No buildCommand is
+# needed: the Dockerfile owns both the frontend build and the demo-data step.
+#
+# This deploys the app in DEMO MODE: no RLE_ANALYSIS_DATA_DIR is set and the real
+# analytical outputs are not present in the repo, so the service automatically
+# serves the bundled synthetic dataset (data/demo/). No private research data is
+# ever published by this deployment.
+#
+# To deploy:
+#   1. Push this repository to GitHub (already your origin).
+#   2. In the Render dashboard: New -> Blueprint -> connect the repo.
+#   3. Render reads this file and builds the Dockerfile. First deploy ~5-8 min.
+#
+# To later serve REAL data on a private host instead, set RLE_ANALYSIS_DATA_DIR
+# to a mounted, read-only path containing the processed CSVs and keep the service
+# private/authenticated.
+
+services:
+  - type: web
+    name: replocx
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    branch: feature/location-representation-explorer
+    healthCheckPath: /api/v1/health
+    autoDeploy: true

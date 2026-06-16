@@ -1,0 +1,21 @@
+target_catchment_type,target_catchment_code,catchment_label,nrel_filter_field,nrel_filter_value,nrel_value_verified,filter_scope_note,hourly_weather_qc_status
+CBSA,10000,Cold & Very Cold HDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,10000,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,10148,Cold & Very Cold LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,10148,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,10296,Cold & Very Cold Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,10296,True,Enumeration-verified demonstration mapping.,PENDING
+County,10444,Cold & Very Cold Rural catchment 1 (demo),in.county,10444,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,10592,Hot-Dry & Mixed Dry HDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,10592,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,10740,Hot-Dry & Mixed Dry LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,10740,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,10888,Hot-Dry & Mixed Dry Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,10888,True,Enumeration-verified demonstration mapping.,PENDING
+County,11036,Hot-Dry & Mixed Dry Rural catchment 1 (demo),in.county,11036,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,11184,Hot-Humid HDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,11184,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,11332,Hot-Humid LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,11332,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,11480,Hot-Humid Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,11480,True,Enumeration-verified demonstration mapping.,PENDING
+County,11628,Hot-Humid Rural catchment 1 (demo),in.county,11628,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,11776,Marine HDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,11776,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,11924,Marine LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,11924,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,12072,Marine Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12072,True,Enumeration-verified demonstration mapping.,PENDING
+County,12220,Marine Rural catchment 1 (demo),in.county,12220,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,37980,"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD (demo)",in.metropolitan_and_micropolitan_statistical_area,37980,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,12516,Mixed-Humid LDU catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12516,True,Enumeration-verified demonstration mapping.,PENDING
+CBSA,12664,Mixed-Humid Suburban catchment 1 (demo),in.metropolitan_and_micropolitan_statistical_area,12664,True,Enumeration-verified demonstration mapping.,PENDING
+County,12812,Mixed-Humid Rural catchment 1 (demo),in.county,12812,True,Enumeration-verified demonstration mapping.,PENDING

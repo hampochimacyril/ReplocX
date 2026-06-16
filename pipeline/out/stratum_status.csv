@@ -1,0 +1,21 @@
+climate_region,urbanicity,status,eligible_candidate_count
+Cold & Very Cold,higher density urban,RESOLVED,3
+Cold & Very Cold,lower density urban,RESOLVED,57
+Cold & Very Cold,suburban/small town,RESOLVED,86
+Cold & Very Cold,rural,RESOLVED,484
+Hot-Dry & Mixed Dry,higher density urban,RESOLVED,2
+Hot-Dry & Mixed Dry,lower density urban,RESOLVED,17
+Hot-Dry & Mixed Dry,suburban/small town,RESOLVED,11
+Hot-Dry & Mixed Dry,rural,RESOLVED,49
+Hot-Humid,higher density urban,RESOLVED,2
+Hot-Humid,lower density urban,RESOLVED,25
+Hot-Humid,suburban/small town,RESOLVED,55
+Hot-Humid,rural,RESOLVED,291
+Marine,higher density urban,RESOLVED,2
+Marine,lower density urban,RESOLVED,9
+Marine,suburban/small town,RESOLVED,7
+Marine,rural,RESOLVED,32
+Mixed-Humid,higher density urban,RESOLVED,1
+Mixed-Humid,lower density urban,RESOLVED,24
+Mixed-Humid,suburban/small town,RESOLVED,73
+Mixed-Humid,rural,RESOLVED,385
