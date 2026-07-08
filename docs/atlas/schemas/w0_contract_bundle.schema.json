@@ -1,0 +1,482 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://replocx.local/schemas/atlas/w0_contract_bundle.schema.json",
+  "title": "ReplocX Research Atlas W0 Contract Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tier_id",
+    "scenario_dictionary",
+    "scenario_summary",
+    "by_stratum",
+    "d_comparisons",
+    "figures",
+    "provenance",
+    "equity_profiles",
+    "equity_scenario_cross"
+  ],
+  "properties": {
+    "schema_version": { "const": "atlas.w0/1.0" },
+    "tier_id": { "const": "replocx_tmy3_wallfix_4scen" },
+    "scenario_dictionary": { "$ref": "#/$defs/scenario_dictionary" },
+    "scenario_summary": { "$ref": "#/$defs/scenario_summary" },
+    "by_stratum": { "$ref": "#/$defs/by_stratum" },
+    "d_comparisons": { "$ref": "#/$defs/d_comparisons" },
+    "figures": { "$ref": "#/$defs/figures" },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "equity_profiles": { "$ref": "#/$defs/equity_profiles" },
+    "equity_scenario_cross": { "$ref": "#/$defs/equity_scenario_cross" }
+  },
+  "$defs": {
+    "scenario_order": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "A" },
+        { "const": "C" },
+        { "const": "B" },
+        { "const": "D" }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "scenario_code": {
+      "enum": ["A", "C", "B", "D"]
+    },
+    "tier": {
+      "enum": ["annual", "seasonal"]
+    },
+    "canonical_data_path": {
+      "type": "string",
+      "pattern": "^04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/"
+    },
+    "f2v3_path": {
+      "type": "string",
+      "pattern": "^04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/",
+      "not": {
+        "pattern": "(f2v2_final|f1v2|F1v2)"
+      }
+    },
+    "metric_notes": {
+      "type": "object",
+      "required": ["hours_gt_28c", "degree_hours_28c", "humidity_hours_gt_0p012kgkg"],
+      "properties": {
+        "hours_gt_28c": { "type": "string", "pattern": "Overheating exposure hours.*28 C" },
+        "degree_hours_28c": { "type": "string", "pattern": "Overheating degree-hours.*28 C" },
+        "humidity_hours_gt_0p012kgkg": {
+          "type": "string",
+          "pattern": "High-humidity exposure hours.*0\\.012 kg/kg"
+        }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "scenario_dictionary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario_order", "source_csv", "scenarios"],
+      "properties": {
+        "scenario_order": { "$ref": "#/$defs/scenario_order" },
+        "source_csv": { "$ref": "#/$defs/canonical_data_path" },
+        "scenarios": {
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/scenario_a" },
+            { "$ref": "#/$defs/scenario_c" },
+            { "$ref": "#/$defs/scenario_b" },
+            { "$ref": "#/$defs/scenario_d" }
+          ],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "scenario_a": {
+      "type": "object",
+      "required": ["code", "scenario_display_label", "scenario_order", "scenario_color", "cooling", "heating", "natural_ventilation"],
+      "properties": {
+        "code": { "const": "A" },
+        "scenario_display_label": { "const": "AC all day" },
+        "scenario_order": { "const": 1 },
+        "scenario_color": { "const": "#0072B2" },
+        "cooling": { "type": "string" },
+        "heating": { "type": "string" },
+        "natural_ventilation": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scenario_c": {
+      "type": "object",
+      "required": ["code", "scenario_display_label", "scenario_order", "scenario_color", "cooling", "heating", "natural_ventilation"],
+      "properties": {
+        "code": { "const": "C" },
+        "scenario_display_label": { "const": "AC 2-8pm + NV other hours" },
+        "scenario_order": { "const": 2 },
+        "scenario_color": { "const": "#009E73" },
+        "cooling": { "type": "string" },
+        "heating": { "type": "string" },
+        "natural_ventilation": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scenario_b": {
+      "type": "object",
+      "required": ["code", "scenario_display_label", "scenario_order", "scenario_color", "cooling", "heating", "natural_ventilation"],
+      "properties": {
+        "code": { "const": "B" },
+        "scenario_display_label": { "const": "NV only" },
+        "scenario_order": { "const": 3 },
+        "scenario_color": { "const": "#E69F00" },
+        "cooling": { "type": "string" },
+        "heating": { "type": "string" },
+        "natural_ventilation": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scenario_d": {
+      "type": "object",
+      "required": ["code", "scenario_display_label", "scenario_order", "scenario_color", "cooling", "heating", "natural_ventilation"],
+      "properties": {
+        "code": { "const": "D" },
+        "scenario_display_label": { "const": "No AC or NV" },
+        "scenario_order": { "const": 4 },
+        "scenario_color": { "const": "#D55E00" },
+        "cooling": { "type": "string" },
+        "heating": { "type": "string" },
+        "natural_ventilation": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scenario_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario_order", "tiers", "metric_notes"],
+      "properties": {
+        "scenario_order": { "$ref": "#/$defs/scenario_order" },
+        "metric_notes": { "$ref": "#/$defs/metric_notes" },
+        "tiers": {
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/scenario_summary_tier_annual" },
+            { "$ref": "#/$defs/scenario_summary_tier_seasonal" }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "scenario_summary_tier_annual": {
+      "allOf": [
+        { "$ref": "#/$defs/scenario_summary_tier" },
+        { "properties": { "tier": { "const": "annual" } } }
+      ]
+    },
+    "scenario_summary_tier_seasonal": {
+      "allOf": [
+        { "$ref": "#/$defs/scenario_summary_tier" },
+        { "properties": { "tier": { "const": "seasonal" } } }
+      ]
+    },
+    "scenario_summary_tier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "source_csv", "rows"],
+      "properties": {
+        "tier": { "$ref": "#/$defs/tier" },
+        "source_csv": { "$ref": "#/$defs/canonical_data_path" },
+        "rows": {
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/summary_row_a" },
+            { "$ref": "#/$defs/summary_row_c" },
+            { "$ref": "#/$defs/summary_row_b" },
+            { "$ref": "#/$defs/summary_row_d" }
+          ],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "summary_row_base": {
+      "type": "object",
+      "required": [
+        "hvac_scenario",
+        "scenario_display_label",
+        "scenario_order",
+        "n_runs",
+        "op_temp_mean_c",
+        "op_temp_p95_true_c",
+        "hours_gt_28c",
+        "degree_hours_28c"
+      ],
+      "properties": {
+        "hvac_scenario": { "$ref": "#/$defs/scenario_code" },
+        "scenario_display_label": { "type": "string" },
+        "scenario_order": { "type": "integer" },
+        "n_runs": { "type": "integer", "minimum": 1 },
+        "op_temp_mean_c": { "type": "number" },
+        "op_temp_p95_true_c": { "type": "number" },
+        "hours_gt_28c": { "type": "number", "minimum": 0 },
+        "degree_hours_28c": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "summary_row_a": {
+      "allOf": [
+        { "$ref": "#/$defs/summary_row_base" },
+        { "properties": { "hvac_scenario": { "const": "A" }, "scenario_order": { "const": 1 } } }
+      ]
+    },
+    "summary_row_c": {
+      "allOf": [
+        { "$ref": "#/$defs/summary_row_base" },
+        { "properties": { "hvac_scenario": { "const": "C" }, "scenario_order": { "const": 2 } } }
+      ]
+    },
+    "summary_row_b": {
+      "allOf": [
+        { "$ref": "#/$defs/summary_row_base" },
+        { "properties": { "hvac_scenario": { "const": "B" }, "scenario_order": { "const": 3 } } }
+      ]
+    },
+    "summary_row_d": {
+      "allOf": [
+        { "$ref": "#/$defs/summary_row_base" },
+        { "properties": { "hvac_scenario": { "const": "D" }, "scenario_order": { "const": 4 } } }
+      ]
+    },
+    "by_stratum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "dimension", "group_column", "scenario_order", "source_csv", "rows", "metric_notes"],
+      "properties": {
+        "tier": { "$ref": "#/$defs/tier" },
+        "dimension": { "enum": ["climate", "urbanicity", "building", "vintage"] },
+        "group_column": { "type": "string" },
+        "scenario_order": { "$ref": "#/$defs/scenario_order" },
+        "source_csv": { "$ref": "#/$defs/canonical_data_path" },
+        "rows": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/stratum_row" } },
+        "metric_notes": { "$ref": "#/$defs/metric_notes" }
+      }
+    },
+    "stratum_row": {
+      "type": "object",
+      "required": [
+        "hvac_scenario",
+        "scenario_display_label",
+        "op_temp_p95_true_c_mean",
+        "op_temp_hours_gt_28c_mean",
+        "humidity_hours_gt_0p012kgkg_mean"
+      ],
+      "properties": {
+        "hvac_scenario": { "$ref": "#/$defs/scenario_code" },
+        "scenario_display_label": { "type": "string" },
+        "op_temp_p95_true_c_mean": { "type": "number" },
+        "op_temp_hours_gt_28c_mean": { "type": "number", "minimum": 0 },
+        "humidity_hours_gt_0p012kgkg_mean": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "d_comparisons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "base_scenario", "base_scenario_display_label", "scenario_order", "source_csv", "comparisons"],
+      "properties": {
+        "tier": { "$ref": "#/$defs/tier" },
+        "base_scenario": { "const": "D" },
+        "base_scenario_display_label": { "const": "No AC or NV" },
+        "scenario_order": { "$ref": "#/$defs/scenario_order" },
+        "source_csv": { "$ref": "#/$defs/canonical_data_path" },
+        "comparisons": {
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/d_comparison_a" },
+            { "$ref": "#/$defs/d_comparison_c" },
+            { "$ref": "#/$defs/d_comparison_b" }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "d_comparison_base": {
+      "type": "object",
+      "required": ["comparison_key", "comparison_scenario", "comparison_scenario_display_label", "comparison_interpretation", "metrics"],
+      "properties": {
+        "comparison_key": { "enum": ["D-A", "D-C", "D-B"] },
+        "comparison_scenario": { "enum": ["A", "C", "B"] },
+        "comparison_scenario_display_label": { "type": "string" },
+        "comparison_interpretation": { "type": "string" },
+        "metrics": {
+          "type": "object",
+          "required": [
+            "op_temp_p95_true_c_reduction_from_D",
+            "op_temp_hours_gt_28c_reduction_from_D",
+            "degree_hours_28c_reduction_from_D"
+          ],
+          "properties": {
+            "op_temp_p95_true_c_reduction_from_D": { "type": "number" },
+            "op_temp_hours_gt_28c_reduction_from_D": { "type": "number" },
+            "degree_hours_28c_reduction_from_D": { "type": "number" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "d_comparison_a": {
+      "allOf": [
+        { "$ref": "#/$defs/d_comparison_base" },
+        { "properties": { "comparison_key": { "const": "D-A" }, "comparison_scenario": { "const": "A" } } }
+      ]
+    },
+    "d_comparison_c": {
+      "allOf": [
+        { "$ref": "#/$defs/d_comparison_base" },
+        { "properties": { "comparison_key": { "const": "D-C" }, "comparison_scenario": { "const": "C" } } }
+      ]
+    },
+    "d_comparison_b": {
+      "allOf": [
+        { "$ref": "#/$defs/d_comparison_base" },
+        { "properties": { "comparison_key": { "const": "D-B" }, "comparison_scenario": { "const": "B" } } }
+      ]
+    },
+    "figures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry_csv", "figures"],
+      "properties": {
+        "registry_csv": { "$ref": "#/$defs/f2v3_path" },
+        "figures": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/figure_row" } }
+      }
+    },
+    "figure_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "figure_id",
+        "figure_class",
+        "source_csv",
+        "asset_png",
+        "asset_pdf",
+        "asset_svg",
+        "atlas_route",
+        "provenance_sidecar"
+      ],
+      "properties": {
+        "figure_id": { "type": "string", "pattern": "^Fig[0-9]{2}$" },
+        "figure_class": { "type": "string" },
+        "source_csv": { "$ref": "#/$defs/f2v3_path" },
+        "asset_png": { "$ref": "#/$defs/f2v3_path" },
+        "asset_pdf": { "$ref": "#/$defs/f2v3_path" },
+        "asset_svg": { "$ref": "#/$defs/f2v3_path" },
+        "atlas_route": { "type": "string", "pattern": "^/results/replocx_tmy3_wallfix_4scen/figures/" },
+        "provenance_sidecar": { "$ref": "#/$defs/f2v3_path" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "certified_cell_count",
+        "scenario_order",
+        "canonical_data_root",
+        "figure_registry_root",
+        "read_only_sources",
+        "endpoint_definitions"
+      ],
+      "properties": {
+        "certified_cell_count": { "const": 720 },
+        "scenario_order": { "$ref": "#/$defs/scenario_order" },
+        "canonical_data_root": {
+          "type": "string",
+          "pattern": "^04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen$"
+        },
+        "figure_registry_root": {
+          "type": "string",
+          "pattern": "^04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final$"
+        },
+        "read_only_sources": { "const": true },
+        "endpoint_definitions": {
+          "type": "object",
+          "required": ["primary_endpoint_families"],
+          "properties": {
+            "primary_endpoint_families": {
+              "type": "array",
+              "prefixItems": [
+                { "const": "op_temp_mean_c" },
+                { "const": "op_temp_p95_true_c" },
+                { "const": "humidity_ratio_mean_kgkg" },
+                { "const": "humidity_ratio_p95_true_kgkg" }
+              ],
+              "items": false,
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "equity_profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profiles", "layers"],
+      "properties": {
+        "profiles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/equity_profile_row" } },
+        "layers": {
+          "type": "object",
+          "required": ["proxy_badges_required", "unverified_status"],
+          "properties": {
+            "proxy_badges_required": { "const": true },
+            "unverified_status": { "const": "REVIEW REQUIRED" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "equity_profile_row": {
+      "type": "object",
+      "required": ["catchment_id", "catchment_label", "proxy_badge", "source_vintage", "join_uncertainty_note"],
+      "properties": {
+        "catchment_id": { "type": "string" },
+        "catchment_label": { "type": "string" },
+        "proxy_badge": { "type": "string" },
+        "source_vintage": { "type": "string" },
+        "join_uncertainty_note": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "equity_scenario_cross": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario", "scenario_display_label", "scenario_order", "metric", "metric_label", "threshold_note", "rows"],
+      "properties": {
+        "scenario": { "const": "D" },
+        "scenario_display_label": { "const": "No AC or NV" },
+        "scenario_order": { "$ref": "#/$defs/scenario_order" },
+        "metric": { "const": "op_temp_hours_gt_28c" },
+        "metric_label": { "const": "Overheating exposure hours" },
+        "threshold_note": { "type": "string", "pattern": "28 C" },
+        "rows": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/equity_cross_row" } }
+      }
+    },
+    "equity_cross_row": {
+      "type": "object",
+      "required": ["catchment_id", "exposure_hours", "equity_percentile", "proxy_badge", "interpretation_note"],
+      "properties": {
+        "catchment_id": { "type": "string" },
+        "exposure_hours": { "type": "number", "minimum": 0 },
+        "equity_percentile": { "type": ["number", "null"] },
+        "proxy_badge": { "type": "string" },
+        "interpretation_note": { "type": "string", "pattern": "no causal claim" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

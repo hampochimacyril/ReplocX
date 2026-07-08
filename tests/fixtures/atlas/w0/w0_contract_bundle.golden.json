@@ -1,0 +1,317 @@
+{
+  "schema_version": "atlas.w0/1.0",
+  "tier_id": "replocx_tmy3_wallfix_4scen",
+  "scenario_dictionary": {
+    "scenario_order": ["A", "C", "B", "D"],
+    "source_csv": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/metadata/replocxTMY3wf4_metadata_scenario_dictionary_4scen_2026-07-07.csv",
+    "scenarios": [
+      {
+        "code": "A",
+        "scenario_display_label": "AC all day",
+        "scenario_order": 1,
+        "scenario_color": "#0072B2",
+        "cooling": "23.88889 C all day",
+        "heating": "21.11111 C all day",
+        "natural_ventilation": "none"
+      },
+      {
+        "code": "C",
+        "scenario_display_label": "AC 2-8pm + NV other hours",
+        "scenario_order": 2,
+        "scenario_color": "#009E73",
+        "cooling": "23.88889 C from 14:00-20:00; 99 C otherwise",
+        "heating": "21.11111 C all day",
+        "natural_ventilation": "available outside 14:00-20:00, subject to the same limits as B"
+      },
+      {
+        "code": "B",
+        "scenario_display_label": "NV only",
+        "scenario_order": 3,
+        "scenario_color": "#E69F00",
+        "cooling": "99 C all day",
+        "heating": "21.11111 C all day",
+        "natural_ventilation": "all day when outdoor and indoor limits allow"
+      },
+      {
+        "code": "D",
+        "scenario_display_label": "No AC or NV",
+        "scenario_order": 4,
+        "scenario_color": "#D55E00",
+        "cooling": "99 C all day",
+        "heating": "21.11111 C all day",
+        "natural_ventilation": "none"
+      }
+    ]
+  },
+  "scenario_summary": {
+    "scenario_order": ["A", "C", "B", "D"],
+    "metric_notes": {
+      "hours_gt_28c": "Overheating exposure hours; threshold: operative temperature above 28 C.",
+      "degree_hours_28c": "Overheating degree-hours; threshold: operative temperature above 28 C.",
+      "humidity_hours_gt_0p012kgkg": "High-humidity exposure hours; threshold: humidity ratio above 0.012 kg/kg."
+    },
+    "tiers": [
+      {
+        "tier": "annual",
+        "source_csv": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/annual/replocxTMY3wf4_annual_annual_scenario_summary_2026-07-07.csv",
+        "rows": [
+          {
+            "hvac_scenario": "A",
+            "scenario_display_label": "AC all day",
+            "scenario_order": 1,
+            "n_runs": 180,
+            "op_temp_mean_c": 21.735795699946067,
+            "op_temp_p95_true_c": 24.65200223575926,
+            "hours_gt_28c": 3.411111111111111,
+            "degree_hours_28c": 0.9163531874772487
+          },
+          {
+            "hvac_scenario": "C",
+            "scenario_display_label": "AC 2-8pm + NV other hours",
+            "scenario_order": 2,
+            "n_runs": 180,
+            "op_temp_mean_c": 22.205746461082853,
+            "op_temp_p95_true_c": 27.226020803089703,
+            "hours_gt_28c": 471.02777777777777,
+            "degree_hours_28c": 1305.3680772051187
+          },
+          {
+            "hvac_scenario": "B",
+            "scenario_display_label": "NV only",
+            "scenario_order": 3,
+            "n_runs": 180,
+            "op_temp_mean_c": 22.661370982441884,
+            "op_temp_p95_true_c": 29.57882375175555,
+            "hours_gt_28c": 940.1611111111112,
+            "degree_hours_28c": 3335.3711697146773
+          },
+          {
+            "hvac_scenario": "D",
+            "scenario_display_label": "No AC or NV",
+            "scenario_order": 4,
+            "n_runs": 180,
+            "op_temp_mean_c": 23.8237008640524,
+            "op_temp_p95_true_c": 33.00065033066365,
+            "hours_gt_28c": 1851.6833333333334,
+            "degree_hours_28c": 7823.353056695673
+          }
+        ]
+      },
+      {
+        "tier": "seasonal",
+        "source_csv": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/seasonal/replocxTMY3wf4_seasonal_seasonal_scenario_summary_2026-07-07.csv",
+        "rows": [
+          {
+            "hvac_scenario": "A",
+            "scenario_display_label": "AC all day",
+            "scenario_order": 1,
+            "n_runs": 180,
+            "op_temp_mean_c": 23.20115134885256,
+            "op_temp_p95_true_c": 24.927560210157267,
+            "hours_gt_28c": 3.411111111111111,
+            "degree_hours_28c": 0.9163531874772487
+          },
+          {
+            "hvac_scenario": "C",
+            "scenario_display_label": "AC 2-8pm + NV other hours",
+            "scenario_order": 2,
+            "n_runs": 180,
+            "op_temp_mean_c": 24.177656667440335,
+            "op_temp_p95_true_c": 29.38702165760967,
+            "hours_gt_28c": 439.95,
+            "degree_hours_28c": 1260.4062048441644
+          },
+          {
+            "hvac_scenario": "B",
+            "scenario_display_label": "NV only",
+            "scenario_order": 3,
+            "n_runs": 180,
+            "op_temp_mean_c": 25.138032988049144,
+            "op_temp_p95_true_c": 31.66047025887164,
+            "hours_gt_28c": 836.2277777777778,
+            "degree_hours_28c": 3173.399178033408
+          },
+          {
+            "hvac_scenario": "D",
+            "scenario_display_label": "No AC or NV",
+            "scenario_order": 4,
+            "n_runs": 180,
+            "op_temp_mean_c": 27.666983684962972,
+            "op_temp_p95_true_c": 35.12688529099165,
+            "hours_gt_28c": 1521.5055555555555,
+            "degree_hours_28c": 6909.080634700095
+          }
+        ]
+      }
+    ]
+  },
+  "by_stratum": {
+    "tier": "annual",
+    "dimension": "climate",
+    "group_column": "climate_region",
+    "scenario_order": ["A", "C", "B", "D"],
+    "source_csv": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/annual/replocxTMY3wf4_annual_annual_by_climate_region_scenario_2026-07-07.csv",
+    "metric_notes": {
+      "hours_gt_28c": "Overheating exposure hours; threshold: operative temperature above 28 C.",
+      "degree_hours_28c": "Overheating degree-hours; threshold: operative temperature above 28 C.",
+      "humidity_hours_gt_0p012kgkg": "High-humidity exposure hours; threshold: humidity ratio above 0.012 kg/kg."
+    },
+    "rows": [
+      {
+        "climate_region": "Hot-Humid",
+        "hvac_scenario": "A",
+        "scenario_display_label": "AC all day",
+        "op_temp_p95_true_c_mean": 26.114282241356875,
+        "op_temp_hours_gt_28c_mean": 2.1666666666666665,
+        "humidity_ratio_mean_kgkg_mean": 0.009799480487549254,
+        "humidity_ratio_p95_true_kgkg_mean": 0.01529485788605272,
+        "humidity_hours_gt_0p012kgkg_mean": 2844.3888888888887
+      },
+      {
+        "climate_region": "Hot-Humid",
+        "hvac_scenario": "C",
+        "scenario_display_label": "AC 2-8pm + NV other hours",
+        "op_temp_p95_true_c_mean": 29.982359165638513,
+        "op_temp_hours_gt_28c_mean": 947.75,
+        "humidity_ratio_mean_kgkg_mean": 0.010978378113447235,
+        "humidity_ratio_p95_true_kgkg_mean": 0.0184674438441856,
+        "humidity_hours_gt_0p012kgkg_mean": 3756.0
+      },
+      {
+        "climate_region": "Hot-Humid",
+        "hvac_scenario": "B",
+        "scenario_display_label": "NV only",
+        "op_temp_p95_true_c_mean": 32.07651265104933,
+        "op_temp_hours_gt_28c_mean": 1796.0277777777778,
+        "humidity_ratio_mean_kgkg_mean": 0.011689963705960564,
+        "humidity_ratio_p95_true_kgkg_mean": 0.01889863836415367,
+        "humidity_hours_gt_0p012kgkg_mean": 4536.5
+      },
+      {
+        "climate_region": "Hot-Humid",
+        "hvac_scenario": "D",
+        "scenario_display_label": "No AC or NV",
+        "op_temp_p95_true_c_mean": 35.248816618471785,
+        "op_temp_hours_gt_28c_mean": 3208.472222222222,
+        "humidity_ratio_mean_kgkg_mean": 0.011924119701103802,
+        "humidity_ratio_p95_true_kgkg_mean": 0.019303503423693975,
+        "humidity_hours_gt_0p012kgkg_mean": 4615.638888888889
+      }
+    ]
+  },
+  "d_comparisons": {
+    "tier": "annual",
+    "base_scenario": "D",
+    "base_scenario_display_label": "No AC or NV",
+    "scenario_order": ["A", "C", "B", "D"],
+    "source_csv": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/annual/replocxTMY3wf4_annual_annual_d_specific_comparisons_2026-07-07.csv",
+    "comparisons": [
+      {
+        "comparison_key": "D-A",
+        "comparison_scenario": "A",
+        "comparison_scenario_display_label": "AC all day",
+        "comparison_interpretation": "Full active-cooling protection relative to sealed passive",
+        "metrics": {
+          "op_temp_p95_true_c_reduction_from_D": 2.0669049517366496,
+          "op_temp_hours_gt_28c_reduction_from_D": 102,
+          "degree_hours_28c_reduction_from_D": 51.73405076855306
+        }
+      },
+      {
+        "comparison_key": "D-C",
+        "comparison_scenario": "C",
+        "comparison_scenario_display_label": "AC 2-8pm + NV other hours",
+        "comparison_interpretation": "Peak-window AC plus outside-window NV effect",
+        "metrics": {
+          "op_temp_p95_true_c_reduction_from_D": 2.3185050836936796,
+          "op_temp_hours_gt_28c_reduction_from_D": 101,
+          "degree_hours_28c_reduction_from_D": 51.13533398150709
+        }
+      },
+      {
+        "comparison_key": "D-B",
+        "comparison_scenario": "B",
+        "comparison_scenario_display_label": "NV only",
+        "comparison_interpretation": "Natural ventilation effect without AC",
+        "metrics": {
+          "op_temp_p95_true_c_reduction_from_D": 2.6417823891701033,
+          "op_temp_hours_gt_28c_reduction_from_D": 101,
+          "degree_hours_28c_reduction_from_D": 51.19558618526882
+        }
+      }
+    ]
+  },
+  "figures": {
+    "registry_csv": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_figure_registry_f2v3_2026-07-07.csv",
+    "figures": [
+      {
+        "figure_id": "Fig01",
+        "figure_class": "results",
+        "source_csv": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/tables/replocxTMY3wf4_final_data_F01_truth_2026-07-07.csv",
+        "asset_png": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F01_truth_2026-07-07.png",
+        "asset_pdf": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F01_truth_2026-07-07.pdf",
+        "asset_svg": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F01_truth_2026-07-07.svg",
+        "atlas_route": "/results/replocx_tmy3_wallfix_4scen/figures/F01_truth",
+        "provenance_sidecar": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F01_truth_2026-07-07.png.prov.json"
+      },
+      {
+        "figure_id": "Fig02",
+        "figure_class": "results",
+        "source_csv": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/tables/replocxTMY3wf4_final_data_F02_summary_2026-07-07.csv",
+        "asset_png": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F02_summary_2026-07-07.png",
+        "asset_pdf": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F02_summary_2026-07-07.pdf",
+        "asset_svg": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F02_summary_2026-07-07.svg",
+        "atlas_route": "/results/replocx_tmy3_wallfix_4scen/figures/F02_summary",
+        "provenance_sidecar": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final/replocxTMY3wf4_final_fig_F02_summary_2026-07-07.png.prov.json"
+      }
+    ]
+  },
+  "provenance": {
+    "certified_cell_count": 720,
+    "scenario_order": ["A", "C", "B", "D"],
+    "canonical_data_root": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen",
+    "figure_registry_root": "04_Analysis/_CANONICAL/20_FIGURES/replocx_tmy3_wallfix_4scen/f2v3_final",
+    "read_only_sources": true,
+    "endpoint_definitions": {
+      "source_csv": "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/metadata/replocxTMY3wf4_metadata_endpoint_definitions_4scen_2026-07-07.csv",
+      "primary_endpoint_families": [
+        "op_temp_mean_c",
+        "op_temp_p95_true_c",
+        "humidity_ratio_mean_kgkg",
+        "humidity_ratio_p95_true_kgkg"
+      ]
+    }
+  },
+  "equity_profiles": {
+    "profiles": [
+      {
+        "catchment_id": "HotHumid_Suburban_BatonRouge_LA",
+        "catchment_label": "HotHumid_Suburban_BatonRouge_LA",
+        "proxy_badge": "REVIEW REQUIRED",
+        "source_vintage": "pending verified CDC SVI / ACS / DOE LEAD join",
+        "join_uncertainty_note": "Do not present as certified until the equity join is verified."
+      }
+    ],
+    "layers": {
+      "proxy_badges_required": true,
+      "unverified_status": "REVIEW REQUIRED"
+    }
+  },
+  "equity_scenario_cross": {
+    "scenario": "D",
+    "scenario_display_label": "No AC or NV",
+    "scenario_order": ["A", "C", "B", "D"],
+    "metric": "op_temp_hours_gt_28c",
+    "metric_label": "Overheating exposure hours",
+    "threshold_note": "Threshold: operative temperature above 28 C.",
+    "rows": [
+      {
+        "catchment_id": "HotHumid_Suburban_BatonRouge_LA",
+        "exposure_hours": 3208.472222222222,
+        "equity_percentile": null,
+        "proxy_badge": "REVIEW REQUIRED",
+        "interpretation_note": "Descriptive exposure by vulnerability only; no causal claim."
+      }
+    ]
+  }
+}
