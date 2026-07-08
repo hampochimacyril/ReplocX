@@ -41,6 +41,16 @@ jobs:
       - name: Run regression suite
         run: python3 -m unittest discover -s tests -v
 
+      - name: Fixture pipeline + outputs-mode regression
+        run: |
+          FIXTURE_OUT="$(mktemp -d)"
+          python3 -m pipeline.run --source fixture --out "$FIXTURE_OUT"
+          python3 -m pipeline.validate --dir "$FIXTURE_OUT"
+          RLE_ANALYSIS_DATA_DIR="$FIXTURE_OUT" python3 -m unittest discover -s tests
+
+      - name: API + security + degraded-mode contract
+        run: python3 scripts/check_release_contract.py
+
       - name: Smoke-test graceful degradation (missing inputs)
         env:
           RLE_ANALYSIS_DATA_DIR: /nonexistent/path
@@ -57,15 +67,72 @@ jobs:
           PY
 
   frontend:
-    name: Frontend syntax
+    name: Frontend checks
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - name: Check frontend module parses
-        run: node --check frontend/app.js
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm run test
+      - name: Production build
+        run: npm run build
+      - name: Dependency audit (production runtime)
+        run: npm audit --omit=dev --audit-level=high
+
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime and quality tools
+        run: python3 -m pip install -r backend/requirements.txt -r requirements-dev.txt
+
+      - name: Ruff lint
+        run: python3 -m ruff check backend pipeline scripts tests clients/python/rle_client
+
+      - name: Black formatting
+        run: >
+          python3 -m black --check
+          backend
+          pipeline
+          scripts
+          tests
+          clients/python/rle_client
+
+      - name: Mypy phase-4/shared files
+        run: >
+          python3 -m mypy
+          backend/api.py
+          backend/auth.py
+          backend/observability.py
+          backend/scenario_store.py
+          clients/python/rle_client
+
+      - name: Coverage gate
+        run: |
+          python3 -m coverage run -m unittest discover -s tests -v
+          python3 -m coverage report
+
+      - name: pip-audit runtime dependencies
+        run: python3 -m pip_audit -r backend/requirements.txt
 
   e2e:
     name: End-to-end (Playwright)
@@ -79,19 +146,28 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Regenerate demonstration dataset
         run: python3 scripts/generate_demo_data.py
 
-      - name: Install Node dependencies
-        run: npm install
+      - name: Install root Node dependencies (Playwright)
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build the frontend (frontend/dist)
+        run: npm run build
+        working-directory: frontend
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
       # playwright.config.ts starts `python3 -m backend.server` and waits on
-      # /api/health, which serves the demo dataset automatically.
+      # /api/health; the stdlib server then serves the built frontend/dist and
+      # the demo dataset automatically.
       - name: Run critical-flow tests
         run: npm run test:e2e
 
@@ -102,3 +178,31 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  docker:
+    name: Docker image build + smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the multi-stage image
+        run: docker build -t replocx:ci .
+
+      - name: Smoke-test the container (demo data, security headers)
+        run: |
+          docker run -d --name replocx-ci -e PORT=8787 -p 8787:8787 replocx:ci
+          trap 'docker logs replocx-ci || true; docker rm -f replocx-ci || true' EXIT
+          for i in $(seq 1 45); do
+            curl -sf http://127.0.0.1:8787/api/health >/dev/null && break
+            sleep 2
+          done
+          python3 - <<'PY'
+          import json
+          import urllib.request
+
+          with urllib.request.urlopen("http://127.0.0.1:8787/api/health", timeout=5) as response:
+              payload = json.load(response)
+          assert payload.get("data_mode") == "demo", payload
+          assert payload.get("data_ready") is True, payload
+          PY
+          curl -sf -D - -o /dev/null http://127.0.0.1:8787/api/dashboard | grep -qi 'content-security-policy'
