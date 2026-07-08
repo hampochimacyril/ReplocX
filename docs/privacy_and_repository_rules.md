@@ -2,9 +2,13 @@
 
 ## Required Repository Posture
 
-This application, its datasets, and generated artifacts must remain private.
+The source repository is private by default. A public portfolio or public demo
+release is allowed only when it is deliberately sanitized and uses synthetic or
+demo-safe data.
 
-- Never create a public repository.
+- Never publish the private source repository as-is.
+- Create a public-safe branch, mirror, release package, or repository only after
+  reviewing every staged path.
 - Never publish raw analytical data, licensed data, credentials, tokens, or API keys.
 - Never push until the exact private GitHub repository URL is confirmed with the owner,
   **Chima Cyril Hampo**.
@@ -36,6 +40,8 @@ ignored. This application does not require credentials for local use.
 
 ## Screenshots
 
-Screenshots for a private draft pull request are allowed only after reviewing them for
-restricted data, local filesystem paths, and identifying details.
-
+Screenshots, GIFs, and demo videos are allowed in a public portfolio release only
+when they use synthetic/demo data and have been reviewed for restricted data,
+local filesystem paths, credentials, identifying details, and private deployment
+URLs. The checked-in `docs/screenshots/`, `docs/demo/`, and tracked
+`marketing/promo.mp4` assets are intended for public-safe demonstration.

@@ -1,10 +1,69 @@
 # Changelog
 
-All notable changes to the Representative Location Explorer are recorded here.
+All notable changes to ReplocX are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses semantic versioning. The analytical *method version* (currently
 2.0) is tracked separately in `selection_metadata.json` and is unchanged by
 these releases.
+
+## [Unreleased]
+
+### ReplocX Research Atlas — private local release candidate
+- Added a modular sibling context set, the **Research Atlas**, served by the same
+  React app and `/api/v1` backend and reading the certified
+  `replocx_tmy3_wallfix_4scen` **720-cell A/C/B/D** results tier read-only.
+  Certified provenance requires R9 PASS and resolves figures and source tables
+  from `f2v3_final` only.
+- Added backend `AtlasService` + shared router with `GET /api/v1/results/*`
+  (`overview`, `scenario-dictionary`, `scenario-summary`, `by-stratum`,
+  `scenario-c`, `d-comparisons`, figure source/bundle, exports, cooling seasons,
+  sensitivity, and provenance) and `GET /api/v1/equity/*` (`profiles`,
+  `scenario-cross`), wired into both stdlib and FastAPI entry points.
+- Gated the Atlas behind `RLE_ENABLE_ATLAS` (default **off**): when disabled the
+  results/equity routes return 404 so the public location-selection demo never
+  exposes the unpublished results. `/api/v1/health` now reports `atlas_enabled`.
+- Added the guided Atlas story spine, p95/exposure-hour framing, A/C/B/D
+  selectors, D-B/D-C/D-A contrasts, site drill-down, and Fig02 source parity.
+  The global data badge now distinguishes the location-selection data mode from
+  the certified private Atlas tier.
+- Added a reproducible, sidecar-backed 20-catchment equity profile. All four
+  layers are READY: CDC/ATSDR SVI (Proxy), ACS income/poverty (Direct), DOE LEAD
+  energy burden (Proxy), and heat vulnerability (Modeled).
+- Added the private VM/Compose/Caddy candidate with Basic auth plus an
+  independently rotated app token, read-only analytical mounts, a public-image
+  runtime allowlist, and local auth/certified-route/equity/leak release checks.
+  Local W4 gates pass; live private deployment and owner sign-off remain pending.
+
+### Redesigned interface — workflows complete (Session 8)
+- Added the scenario workbench: composite-weight editing with sum validation and
+  one-click normalization, density/distance/penalty/uniqueness/weather-QC controls,
+  an overrides editor, a live preview of deltas vs. the baseline, apply, and
+  versioned save/share with a saved-scenario browser and version history.
+- Added the candidate ranking table (TanStack Table) with sorting, column
+  visibility, pagination, comparison selection, and CSV export of the filtered
+  ranking, sharing the global filter state with the map.
+- Added the comparison view: quantified baseline-vs-scenario allocation deltas,
+  a per-stratum representative diff with reasons, and a side-by-side candidate
+  matrix.
+- Expanded methodology with data lineage, a live validation-status table, source
+  citations, and API/export documentation; added scenario-config JSON and map-PNG
+  exports.
+- Removed the legacy vanilla frontend (`frontend/legacy/`); `frontend_dir()` now
+  resolves `dist` → source.
+
+## [1.2.0] — 2026-06-05
+
+### Productionization
+- Added `/api/v1` aliases and a published OpenAPI schema while preserving legacy
+  `/api` routes for existing clients and uptime checks.
+- Added SQLite scenario persistence with saved scenario ids, version metadata,
+  and list/read endpoints.
+- Added optional bearer-token auth for private deployments, plus a private
+  Render blueprint example that keeps the public demo profile separate.
+- Added structured JSON-style request/error logging and optional Sentry capture
+  via environment variables.
+- Added Phase 4 CI hardening: ruff, black, mypy, coverage gate, pip-audit, and
+  Dependabot configuration.
 
 ## [1.1.0] — 2026-06-02
 
@@ -58,7 +117,7 @@ these releases.
   silent failed request.
 
 ## [1.0.0]
-- Initial Representative Location Explorer: overview dashboard, ZIP explorer,
+- Initial ReplocX release: overview dashboard, ZIP explorer,
   scenario builder, candidate ranking, allocation comparison, methodology
   appendix; deterministic scoring and min-cost distinct-location allocation;
   read-only ingestion with SHA-256 manifest; dependency-free and FastAPI entry
