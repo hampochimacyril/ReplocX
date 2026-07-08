@@ -1,2 +1,1 @@
-"""Representative Location Explorer backend."""
-
+"""ReplocX backend."""

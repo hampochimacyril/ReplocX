@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+# Vite writes these transient files while loading the TS config and normally
+# removes them; keep them out of version control regardless.
+vite.config.ts.timestamp-*.mjs
+vite.config.js.timestamp-*.mjs

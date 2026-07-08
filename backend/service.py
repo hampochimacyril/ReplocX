@@ -13,11 +13,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from .atlas_service import atlas_enabled
+from .auth import auth_status
 from .data_service import DataService
+from .scenario_store import DEFAULT_SCENARIO_DB, SCENARIO_DB_ENV
 
 __all__ = ["APP_VERSION", "ServiceUnavailableError", "get_service", "health"]
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 
 
 class ServiceUnavailableError(RuntimeError):
@@ -55,9 +58,16 @@ def health() -> dict[str, Any]:
 
     payload: dict[str, Any] = {
         "status": "ok",
-        "service": "Representative Location Explorer",
+        "service": "ReplocX",
         "version": APP_VERSION,
+        "api_version": "v1",
         "data_ready": False,
+        "atlas_enabled": atlas_enabled(),
+        "auth": auth_status(),
+        "scenario_store": {
+            "database_env": SCENARIO_DB_ENV,
+            "default_path": str(DEFAULT_SCENARIO_DB),
+        },
     }
     try:
         service = get_service()

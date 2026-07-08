@@ -1,2 +1,1 @@
-"""Representative Location Explorer tests."""
-
+"""ReplocX tests."""

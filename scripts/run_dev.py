@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Launch the local Representative Location Explorer."""
+"""Launch ReplocX locally."""
 
 import sys
 from pathlib import Path
@@ -7,7 +7,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from backend.server import main
-
 
 if __name__ == "__main__":
     main()

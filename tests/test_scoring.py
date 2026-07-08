@@ -3,7 +3,8 @@ from __future__ import annotations
 import unittest
 
 from backend.data_service import DataService
-from backend.models import ScenarioConfig
+from backend.models import DEFAULT_OVERRIDE, ScenarioConfig
+from backend.scoring import data_compatible_default_config
 
 
 class ScoringRegressionTests(unittest.TestCase):
@@ -32,13 +33,28 @@ class ScoringRegressionTests(unittest.TestCase):
                 self.assertEqual("in.metropolitan_and_micropolitan_statistical_area", row["nrel_filter_field"])
             self.assertTrue(row["nrel_value_verified"], row["catchment_label"])
 
-    def test_default_scenario_applies_no_override(self) -> None:
-        # No research-priority override is applied by default: every stratum keeps
-        # its top-ranked candidate and there are no substitutions.
-        self.assertEqual([], self.result["config"]["overrides"])
-        self.assertEqual([], self.result["changes"])
-        for row in self.result["selected"]:
-            self.assertEqual(1, row["scenario_rank"], row["catchment_label"])
+    def test_default_research_override_is_honored(self) -> None:
+        # The default scenario applies a research-priority override. The overridden
+        # stratum must select the override's catchment regardless of its
+        # unconstrained rank, so this holds for both the demo dataset and any real
+        # national pipeline output (where the override target need not rank #2).
+        overridden = [
+            row
+            for row in self.result["selected"]
+            if row["climate_region"] == DEFAULT_OVERRIDE.climate_region
+            and row["urbanicity"] == DEFAULT_OVERRIDE.urbanicity
+        ]
+        self.assertEqual(1, len(overridden))
+        self.assertEqual(DEFAULT_OVERRIDE.catchment_code, str(overridden[0]["catchment_code"]).zfill(5))
+        self.assertGreaterEqual(int(overridden[0]["scenario_rank"]), 1)
+
+    def test_implicit_default_override_is_removed_when_dataset_reclassifies_target(self) -> None:
+        candidates = [dict(row) for row in self.service.candidates]
+        target = next(row for row in candidates if str(row["catchment_code"]).zfill(5) == "37980")
+        target["urbanicity"] = "lower density urban"
+        target["urbanicity_short"] = "LDU"
+        config = data_compatible_default_config(candidates)
+        self.assertEqual((), config.overrides)
 
     def test_leading_zero_geography_identifiers_are_preserved(self) -> None:
         lookup = self.service.zip_lookup("02108")
@@ -48,13 +64,16 @@ class ScoringRegressionTests(unittest.TestCase):
 
     def test_weights_must_sum_to_one(self) -> None:
         with self.assertRaisesRegex(ValueError, "sum to 1.0"):
-            ScenarioConfig.from_dict({"weights": {
-                "housing_unit_coverage_percentile": 0.5,
-                "population_density_percentile": 0.5,
-                "population_coverage_percentile": 0.5,
-            }})
+            ScenarioConfig.from_dict(
+                {
+                    "weights": {
+                        "housing_unit_coverage_percentile": 0.5,
+                        "population_density_percentile": 0.5,
+                        "population_coverage_percentile": 0.5,
+                    }
+                }
+            )
 
 
 if __name__ == "__main__":
     unittest.main()
-

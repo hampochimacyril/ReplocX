@@ -1,0 +1,145 @@
+/*
+ * ReplocX design tokens — implements docs/UI_REDESIGN_SPEC.md §5.
+ * Restrained analytical aesthetic: square/low-radius surfaces, hairline borders,
+ * minimal elevation, semantic color used sparingly and never as the only signal.
+ * Light theme is primary; the dark theme is defined and toggled via
+ * `data-theme="dark"` on <html>.
+ */
+:root {
+  /* Surfaces & text (§5.1) */
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --surface-2: #eef1f4;
+  --border: #d7dce2;
+  --border-strong: #b4bcc6;
+  --text: #11161c;
+  --text-muted: #5b6470;
+
+  /* Interactive accent (single accent, not navy/teal monochrome) */
+  --accent: #1f6feb;
+  --accent-weak: #e3ecfd;
+  --accent-contrast: #ffffff;
+
+  /* Status (§5.1) */
+  --ok: #1f8a53;
+  --ok-weak: #e7f4ec;
+  --ok-border: #bfe0cc;
+  --warn: #b5740b;
+  --warn-weak: #fbf1dd;
+  --warn-border: #ecd9ad;
+  --danger: #c0392b;
+  --danger-weak: #fbe9e7;
+  --danger-border: #edc4bf;
+  --info: #2563a8;
+
+  /* Map categorical hues — 5 climate regions, colorblind-aware (§5.1) */
+  --c-cold: #2c7fb8;
+  --c-hotdry: #d95f0e;
+  --c-hothumid: #c0392b;
+  --c-marine: #1f8a53;
+  --c-mixed: #756bb1;
+
+  /* Borders / radius / elevation (§5.4) */
+  --radius: 4px;
+  --radius-sm: 3px;
+  --shadow: 0 1px 2px rgba(16, 22, 28, 0.08), 0 2px 8px rgba(16, 22, 28, 0.06);
+
+  /* Spacing scale, 4px base (§5.3) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Typography (§5.2) */
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --fs-caption: 12px;
+  --lh-caption: 16px;
+  --fs-body-sm: 13px;
+  --lh-body-sm: 18px;
+  --fs-body: 14px;
+  --lh-body: 20px;
+  --fs-subtitle: 16px;
+  --lh-subtitle: 22px;
+  --fs-h3: 18px;
+  --lh-h3: 24px;
+  --fs-h2: 22px;
+  --lh-h2: 28px;
+  --fs-h1: 26px;
+  --lh-h1: 32px;
+
+  /* Layout (§3) */
+  --nav-w: 56px;
+  --panel-w: 320px;
+  --drawer-w: 360px;
+  --topbar-h: 52px;
+
+  --motion: 160ms;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1116;
+  --surface: #161b22;
+  --surface-2: #1d242d;
+  --border: #2a323d;
+  --border-strong: #3a4350;
+  --text: #e6eaf0;
+  --text-muted: #9aa4b1;
+
+  --accent: #4d8df0;
+  --accent-weak: #1a2942;
+  --accent-contrast: #0e1116;
+
+  --ok: #46b377;
+  --ok-weak: #15291f;
+  --ok-border: #2c4a39;
+  --warn: #d79730;
+  --warn-weak: #2a2113;
+  --warn-border: #4a3a1d;
+  --danger: #e06155;
+  --danger-weak: #2c1a18;
+  --danger-border: #4a2c28;
+  --info: #5b9bd8;
+
+  --c-cold: #56a7d8;
+  --c-hotdry: #ef8a47;
+  --c-hothumid: #e06155;
+  --c-marine: #46b377;
+  --c-mixed: #9d92cf;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1116;
+    --surface: #161b22;
+    --surface-2: #1d242d;
+    --border: #2a323d;
+    --border-strong: #3a4350;
+    --text: #e6eaf0;
+    --text-muted: #9aa4b1;
+    --accent: #4d8df0;
+    --accent-weak: #1a2942;
+    --accent-contrast: #0e1116;
+    --ok: #46b377;
+    --ok-weak: #15291f;
+    --ok-border: #2c4a39;
+    --warn: #d79730;
+    --warn-weak: #2a2113;
+    --warn-border: #4a3a1d;
+    --danger: #e06155;
+    --danger-weak: #2c1a18;
+    --danger-border: #4a2c28;
+    --info: #5b9bd8;
+    --c-cold: #56a7d8;
+    --c-hotdry: #ef8a47;
+    --c-hothumid: #e06155;
+    --c-marine: #46b377;
+    --c-mixed: #9d92cf;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.4);
+  }
+}

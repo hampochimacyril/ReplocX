@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate a self-contained synthetic demonstration dataset.
 
-The Representative Location Explorer normally reads private analytical outputs
+ReplocX normally reads private analytical outputs
 from ``04_Analysis/location_selection/data/processed``. That directory is not
 distributed with the application, so a fresh clone (or CI runner, or reviewer)
 has nothing to load. This script writes a deterministic, clearly-synthetic
@@ -12,7 +12,10 @@ suite checks against real data:
 
 * exactly 2,959 scored candidates,
 * the 5 climate-region x 4 urbanicity strata (20 total), one distinct selection
-  each (every stratum keeps its single unambiguous top candidate; no override),
+  each,
+* a Mixed-Humid / higher-density-urban stratum where CBSA 37980
+  (Philadelphia-Camden-Wilmington) is the unconstrained rank-2 candidate, so the
+  documented research-priority override produces a single transparent change,
 * rural strata mapped to ``in.county`` and non-rural strata to
   ``in.metropolitan_and_micropolitan_statistical_area``, all enumeration-verified.
 
@@ -56,20 +59,48 @@ CLIMATE_CENTROID = {
 }
 URBAN_OFFSET = {"HDU": (0.0, 0.0), "LDU": (0.6, 0.4), "Suburban": (-0.5, 0.7), "Rural": (1.1, -0.9)}
 
+# The Mixed-Humid / HDU stratum is special: a higher-scoring "winner" plus the
+# Philadelphia CBSA at rank 2, so the override changes exactly one assignment.
+MH_HDU = ("Mixed-Humid", ("higher density urban", "HDU"))
+PHILLY_CODE = "37980"
+PHILLY_LABEL = "Philadelphia-Camden-Wilmington, PA-NJ-DE-MD (demo)"
+WINNER_CODE = "47900"
+WINNER_LABEL = "Washington-Arlington-Alexandria, DC-VA-MD-WV (demo)"
+
 CANDIDATE_FIELDS = [
-    "climate_region", "urbanicity", "urbanicity_short", "catchment_type",
-    "catchment_code", "catchment_label", "population_2010", "housing_units_2010",
-    "population_density_sqmi", "housing_unit_density_sqmi",
-    "housing_unit_coverage_percentile", "population_density_percentile",
-    "population_coverage_percentile", "location_score", "selection_rank",
-    "selected", "station_distance_miles", "selected_station_name",
-    "selected_station_number", "selected_station_lat", "selected_station_lon",
-    "centroid_lat", "centroid_lon",
+    "climate_region",
+    "urbanicity",
+    "urbanicity_short",
+    "catchment_type",
+    "catchment_code",
+    "catchment_label",
+    "population_2010",
+    "housing_units_2010",
+    "population_density_sqmi",
+    "housing_unit_density_sqmi",
+    "housing_unit_coverage_percentile",
+    "population_density_percentile",
+    "population_coverage_percentile",
+    "location_score",
+    "selection_rank",
+    "selected",
+    "station_distance_miles",
+    "selected_station_name",
+    "selected_station_number",
+    "selected_station_lat",
+    "selected_station_lon",
+    "centroid_lat",
+    "centroid_lon",
 ]
 SITE_FIELDS = [
-    "target_catchment_type", "target_catchment_code", "catchment_label",
-    "nrel_filter_field", "nrel_filter_value", "nrel_value_verified",
-    "filter_scope_note", "hourly_weather_qc_status",
+    "target_catchment_type",
+    "target_catchment_code",
+    "catchment_label",
+    "nrel_filter_field",
+    "nrel_filter_value",
+    "nrel_value_verified",
+    "filter_scope_note",
+    "hourly_weather_qc_status",
 ]
 
 
@@ -123,7 +154,7 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
     by_stratum: dict[tuple, list[dict]] = {s: [] for s in STRATA}
     next_code = 10000
 
-    for stratum, count in zip(STRATA, counts):
+    for stratum, count in zip(STRATA, counts, strict=True):
         climate, urb = stratum
         for n in range(count):
             # Exactly one unambiguous winner per stratum (n == 0) sits above an
@@ -131,21 +162,50 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
             # and the written baseline selection always agree (every selection is
             # then enumeration-verified in the site list).
             value = 0.90 if n == 0 else 0.62 + ((n - 1) % 22) * 0.01  # winner, else 0.62..0.83
-            row = _make_row(climate, urb, str(next_code), f"{climate} {urb[1]} catchment {n + 1} (demo)", value, next_code)
+            row = _make_row(
+                climate, urb, str(next_code), f"{climate} {urb[1]} catchment {n + 1} (demo)", value, next_code
+            )
             next_code += 1
             candidates.append(row)
             by_stratum[stratum].append(row)
 
-    # Rank within each stratum and choose the baseline selection: the single
-    # unambiguous top candidate per stratum. No research-priority override is
-    # applied by default (overrides remain a user-supplied feature).
+    # Inject the Philadelphia narrative into Mixed-Humid / HDU without changing
+    # the total count: repurpose the two highest filler slots.
+    mh = by_stratum[MH_HDU]
+    winner = mh[0]
+    winner.update(
+        {
+            "catchment_code": WINNER_CODE,
+            "catchment_label": WINNER_LABEL,
+            "location_score": 0.952,
+            "housing_unit_coverage_percentile": 0.952,
+            "population_density_percentile": 0.952,
+            "population_coverage_percentile": 0.952,
+        }
+    )
+    philly = mh[1]
+    philly.update(
+        {
+            "catchment_code": PHILLY_CODE,
+            "catchment_label": PHILLY_LABEL,
+            "location_score": 0.901,
+            "housing_unit_coverage_percentile": 0.901,
+            "population_density_percentile": 0.901,
+            "population_coverage_percentile": 0.901,
+        }
+    )
+
+    # Rank within each stratum and choose the baseline selection (override applied
+    # for the Mixed-Humid HDU stratum: Philadelphia, not the unconstrained top).
     selected_rows: list[dict] = []
     for stratum, rows in by_stratum.items():
         rows.sort(key=lambda r: (-float(r["location_score"]), int(r["catchment_code"])))
         for rank, row in enumerate(rows, start=1):
             row["selection_rank"] = rank
             row["selected"] = False
-        chosen = rows[0]
+        chosen = (
+            next((r for r in rows if r["catchment_code"] == PHILLY_CODE), rows[0]) if stratum == MH_HDU else rows[0]
+        )
         chosen["selected"] = True
         selected_rows.append(chosen)
 
@@ -154,8 +214,9 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
             "target_catchment_type": r["catchment_type"],
             "target_catchment_code": r["catchment_code"],
             "catchment_label": r["catchment_label"],
-            "nrel_filter_field": "in.county" if r["urbanicity"] == "rural"
-            else "in.metropolitan_and_micropolitan_statistical_area",
+            "nrel_filter_field": (
+                "in.county" if r["urbanicity"] == "rural" else "in.metropolitan_and_micropolitan_statistical_area"
+            ),
             "nrel_filter_value": r["catchment_code"],
             "nrel_value_verified": True,
             "filter_scope_note": "Enumeration-verified demonstration mapping.",
@@ -168,7 +229,7 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
 
 def _write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
+        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -186,8 +247,14 @@ def main() -> None:
         DEMO_DIR / "stratum_status.csv",
         ["climate_region", "urbanicity", "status", "eligible_candidate_count"],
         [
-            {"climate_region": c, "urbanicity": u[0], "status": "RESOLVED",
-             "eligible_candidate_count": sum(1 for r in candidates if r["climate_region"] == c and r["urbanicity"] == u[0])}
+            {
+                "climate_region": c,
+                "urbanicity": u[0],
+                "status": "RESOLVED",
+                "eligible_candidate_count": sum(
+                    1 for r in candidates if r["climate_region"] == c and r["urbanicity"] == u[0]
+                ),
+            }
             for c, u in STRATA
         ],
     )
@@ -197,8 +264,16 @@ def main() -> None:
         "boundary_system": "2010 Census tracts (demonstration)",
         "data_mode": "demo",
         "sources": [
-            {"name": "Synthetic demonstration dataset", "role": "Generated by scripts/generate_demo_data.py for offline review and CI.", "file": "data/demo/"},
-            {"name": "HUD-USPS ZIP crosswalk schema", "role": "Bundled demonstration subset for ZIP resolution.", "file": "data/zip_crosswalk_demo.csv"},
+            {
+                "name": "Synthetic demonstration dataset",
+                "role": "Generated by scripts/generate_demo_data.py for offline review and CI.",
+                "file": "data/demo/",
+            },
+            {
+                "name": "HUD-USPS ZIP crosswalk schema",
+                "role": "Bundled demonstration subset for ZIP resolution.",
+                "file": "data/zip_crosswalk_demo.csv",
+            },
         ],
         "limitations": [
             "This dataset is synthetic and for demonstration only; it is not a research result.",

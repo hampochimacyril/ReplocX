@@ -7,9 +7,8 @@ import argparse
 import csv
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 APP_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ANALYSIS_DIR = APP_ROOT.parents[1] / "location_selection" / "data" / "processed"
@@ -47,7 +46,7 @@ def main() -> None:
     if missing:
         raise SystemExit(f"Missing required analytical outputs: {', '.join(missing)}")
     manifest = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "mode": "read-only analytical input references",
         "analysis_directory": str(args.analysis_dir.resolve()),
         "files": [
@@ -65,4 +64,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

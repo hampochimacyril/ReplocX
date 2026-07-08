@@ -1,0 +1,12 @@
+county_geoid,county_name,cbsa_code,cbsa_name,cbsa_type
+42101,"Philadelphia County, PA",37980,"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",Metropolitan
+42091,"Montgomery County, PA",37980,"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",Metropolitan
+42017,"Bucks County, PA",37980,"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",Metropolitan
+42003,"Allegheny County, PA",38300,"Pittsburgh, PA",Metropolitan
+42007,"Beaver County, PA",38300,"Pittsburgh, PA",Metropolitan
+04013,"Maricopa County, AZ",38060,"Phoenix-Mesa-Chandler, AZ",Metropolitan
+04021,"Pinal County, AZ",38060,"Phoenix-Mesa-Chandler, AZ",Metropolitan
+04019,"Pima County, AZ",46060,"Tucson, AZ",Metropolitan
+27053,"Hennepin County, MN",33460,"Minneapolis-St. Paul-Bloomington, MN-WI",Metropolitan
+27123,"Ramsey County, MN",33460,"Minneapolis-St. Paul-Bloomington, MN-WI",Metropolitan
+27137,"St. Louis County, MN",20260,"Duluth, MN-WI",Metropolitan
