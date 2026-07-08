@@ -1,0 +1,76 @@
+# Render blueprint EXAMPLE for a private, authenticated deployment.
+#
+# Keep render.yaml as the PUBLIC demo profile. This file is an example template:
+# real-data mounts and secrets must be supplied by the approved private host.
+# Never commit actual tokens, Basic-auth credentials, or private data.
+#
+# W4 ATLAS WARNING: Render must sit behind an organization-controlled nginx or
+# Caddy reverse proxy that enforces HTTP Basic auth. This blueprint alone does
+# not provide that first layer. The Atlas data/figure roots must also be mounted
+# read-only; if the platform cannot enforce read-only mounts, use
+# docker-compose.atlas-private.example.yml on an approved private host instead.
+#
+# WHY THE DOCKER RUNTIME (changed from the earlier `python` example): the
+# multi-stage Dockerfile builds the React/Vite frontend (Node stage) and serves
+# the compiled assets from the Python image. A bare `python` runtime would NOT
+# build frontend/dist, so the UI would not render. Using the same Dockerfile as
+# the public profile keeps the two deployments byte-for-byte consistent except
+# for data + auth + persistence.
+#
+# The public-safe Dockerfile intentionally does not bake real selection or Atlas
+# data into any image. Populate approved private storage out of band and point
+# these variables at the mounted app-ready roots.
+#
+# A PAID instance is REQUIRED for a real deployment:
+#   * Persistent disks require a paid instance (free instances are ephemeral, so
+#     the SQLite scenario store would be wiped on every deploy/restart).
+#   * Free web services spin down after 15 min idle; paid instances stay warm so
+#     health monitoring and availability are meaningful.
+# Render encrypts disks at rest and snapshots them automatically every 24 h
+# (retained >= 7 days). See docs/OPERATIONS_RUNBOOK.md.
+
+services:
+  - type: web
+    name: replocx-private
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter            # paid: required for the persistent disk + no spin-down
+    region: oregon
+    branch: feature/research-atlas
+    healthCheckPath: /api/v1/health
+    autoDeploy: false        # promote production deploys deliberately, after sign-off
+    disk:
+      name: replocx-private-data
+      mountPath: /var/data   # SQLite scenario store lives here; snapshotted daily
+      sizeGB: 1
+    envVars:
+      - key: RLE_ANALYSIS_DATA_DIR
+        value: "/var/data/analysis"
+      - key: RLE_ENABLE_ATLAS
+        value: "1"
+      - key: RLE_ATLAS_DATA_DIR
+        value: "/var/data/atlas/replocx_tmy3_wallfix_4scen"
+      - key: RLE_ATLAS_FIGURE_DIR
+        value: "/var/data/atlas-figures/f2v3_final"
+      - key: RLE_REQUIRE_AUTH
+        value: "1"
+      - key: RLE_PRIVATE_AUTH_TOKEN
+        sync: false                  # set in the dashboard from your secret manager
+      - key: RLE_SCENARIO_DB
+        value: "/var/data/replocx/scenarios.sqlite3"  # on the persistent disk
+      - key: RLE_LOG_LEVEL
+        value: "INFO"
+      - key: RLE_SENTRY_DSN
+        sync: false                  # optional error tracking; set in the dashboard
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+
+# After the blueprint deploys, in the Render dashboard:
+#   * Put the service behind nginx/Caddy Basic auth; do not expose it directly.
+#   * Settings -> Inbound IP rules: restrict to the proxy/org egress ranges.
+#   * Confirm the managed TLS certificate is active on the service domain.
+#   * Set RLE_PRIVATE_AUTH_TOKEN and (optionally) RLE_SENTRY_DSN as secrets.
+#   * Verify the mounted data roots are not writable by the app process.
+# The reverse proxy translates X-RLE-Auth to Authorization: Bearer upstream so
+# Basic auth and the app token do not contend for the same request header.

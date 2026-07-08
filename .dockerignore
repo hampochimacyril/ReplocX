@@ -1,18 +1,38 @@
 .DS_Store
 .env
+.env.*
 .git
+.github
 .venv
+.tools
+.mypy_cache
+.ruff_cache
+.pytest_cache
 __pycache__/
 *.py[cod]
 node_modules/
 coverage/
+.coverage
+.coverage.*
 dist/
+*.tsbuildinfo
 playwright-report/
 test-results/
+prototype/
+marketing/
 data/analysis_manifest.json
 data/private/
 data/raw/
+# Public image/build-context boundary: private and real analytical tiers are
+# mounted only on approved private hosts and must never be sent to a public
+# image builder.
+data/atlas/
+pipeline/out/
+tests/fixtures/atlas/
+docs/atlas/screenshots/
+replocx_paper_workspace/
+# Keep credential-bearing documents and notes out of the image.
+*.docx
 *.zip
 *.xlsx
 *.parquet
-

@@ -1,4 +1,8 @@
-# Render blueprint — one-click public deploy of the Representative Location Explorer.
+# Render blueprint — one-click public deploy of ReplocX.
+#
+# Uses the Docker runtime so the multi-stage Dockerfile builds the React/Vite
+# frontend (Node stage) and serves it from the Python image. No buildCommand is
+# needed: the Dockerfile owns both the frontend build and the demo-data step.
 #
 # This deploys the app in DEMO MODE: no RLE_ANALYSIS_DATA_DIR is set and the real
 # analytical outputs are not present in the repo, so the service automatically
@@ -8,7 +12,7 @@
 # To deploy:
 #   1. Push this repository to GitHub (already your origin).
 #   2. In the Render dashboard: New -> Blueprint -> connect the repo.
-#   3. Render reads this file and provisions the service. First deploy ~3-5 min.
+#   3. Render reads this file and builds the Dockerfile. First deploy ~5-8 min.
 #
 # To later serve REAL data on a private host instead, set RLE_ANALYSIS_DATA_DIR
 # to a mounted, read-only path containing the processed CSVs and keep the service
@@ -16,15 +20,15 @@
 
 services:
   - type: web
-    name: representative-location-explorer
-    runtime: python
+    name: replocx
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free
     region: oregon
-    branch: main
-    buildCommand: "pip install -r backend/requirements.txt && python scripts/generate_demo_data.py"
-    startCommand: "uvicorn backend.fastapi_app:app --host 0.0.0.0 --port $PORT"
-    healthCheckPath: /api/health
+    branch: feature/location-representation-explorer
+    healthCheckPath: /api/v1/health
     autoDeploy: true
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.12.6"
+      - key: RLE_ENABLE_ATLAS
+        value: "0"
