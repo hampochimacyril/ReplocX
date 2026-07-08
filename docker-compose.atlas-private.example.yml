@@ -1,0 +1,52 @@
+# Example only: inject secrets from an approved secret manager/orchestrator.
+# Do not use a committed .env file for production credentials.
+services:
+  atlas-app:
+    build: .
+    expose:
+      - "8787"
+    environment:
+      RLE_ANALYSIS_DATA_DIR: /analysis
+      RLE_ENABLE_ATLAS: "1"
+      RLE_ATLAS_DATA_DIR: /atlas
+      RLE_ATLAS_FIGURE_DIR: /atlas-figures
+      RLE_REQUIRE_AUTH: "1"
+      RLE_PRIVATE_AUTH_TOKEN: ${RLE_PRIVATE_AUTH_TOKEN:?inject from secret manager}
+      RLE_SCENARIO_DB: /state/scenarios.sqlite3
+    volumes:
+      - ${RLE_ANALYSIS_DATA_HOST_DIR:?approved analysis root}:/analysis:ro
+      - ${RLE_ATLAS_DATA_HOST_DIR:?certified 4scen root}:/atlas:ro
+      - ${RLE_ATLAS_FIGURE_HOST_DIR:?certified f2v3_final root}:/atlas-figures:ro
+      - atlas-state:/state
+    networks:
+      - private
+    restart: unless-stopped
+
+  atlas-proxy:
+    image: caddy:2.10-alpine
+    depends_on:
+      - atlas-app
+    environment:
+      RLE_BASIC_AUTH_USER: ${RLE_BASIC_AUTH_USER:?inject from secret manager}
+      RLE_BASIC_AUTH_HASH: ${RLE_BASIC_AUTH_HASH:?inject a Caddy password hash}
+      RLE_PRIVATE_HOST: ${RLE_PRIVATE_HOST:?private DNS name}
+    ports:
+      - "443:443"
+    volumes:
+      - ./deploy/atlas-private/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - private
+      - edge
+    restart: unless-stopped
+
+networks:
+  private:
+    internal: true
+  edge:
+
+volumes:
+  atlas-state:
+  caddy-data:
+  caddy-config:

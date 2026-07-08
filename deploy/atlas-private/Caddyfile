@@ -1,0 +1,22 @@
+{$RLE_PRIVATE_HOST} {
+	encode zstd gzip
+
+	# First layer: browser-facing HTTP Basic auth. Supply a Caddy-compatible
+	# password hash from the secret manager; never commit the plaintext/hash.
+	basic_auth {
+		{$RLE_BASIC_AUTH_USER} {$RLE_BASIC_AUTH_HASH}
+	}
+
+	reverse_proxy atlas-app:8787 {
+		# Authorization is already occupied by Basic auth at the public edge.
+		# The SPA therefore sends its app token as X-RLE-Auth; translate it to
+		# the existing Bearer gate before forwarding and remove the custom copy.
+		header_up Authorization "Bearer {http.request.header.X-RLE-Auth}"
+		header_up -X-RLE-Auth
+	}
+
+	header {
+		Cache-Control "no-store"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+}
