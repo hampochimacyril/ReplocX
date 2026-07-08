@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Iterable
 from copy import deepcopy
+from dataclasses import replace
 from statistics import median
-from typing import Any, Iterable
+from typing import Any
 
-from .models import ScenarioConfig
-
+from .models import DEFAULT_OVERRIDE, ScenarioConfig
 
 CLIMATE_ORDER = [
     "Cold & Very Cold",
@@ -69,6 +70,33 @@ def _eligible_rows(candidates: Iterable[dict[str, Any]], config: ScenarioConfig)
         )
         result.append(row)
     return result
+
+
+def data_compatible_default_config(
+    candidates: list[dict[str, Any]],
+    config: ScenarioConfig | None = None,
+) -> ScenarioConfig:
+    """Drop only the implicit Philadelphia default when this dataset cannot use it.
+
+    Recorded/demo data classify Philadelphia in Mixed-Humid HDU, while a live
+    tract-derived vintage may classify the same CBSA differently. The baseline
+    must not force a geography into the wrong stratum. Explicit user-supplied
+    overrides bypass this helper and retain the normal fail-loud behavior.
+    """
+
+    candidate_config = config or ScenarioConfig.from_dict(None)
+    if candidate_config.overrides != (DEFAULT_OVERRIDE,):
+        return candidate_config
+    eligible = _eligible_rows(candidates, candidate_config)
+    available = any(
+        row["scenario_eligible"]
+        and row["climate_region"] == DEFAULT_OVERRIDE.climate_region
+        and row["urbanicity"] == DEFAULT_OVERRIDE.urbanicity
+        and row["catchment_type"] == DEFAULT_OVERRIDE.catchment_type
+        and str(row["catchment_code"]).zfill(5) == DEFAULT_OVERRIDE.catchment_code
+        for row in eligible
+    )
+    return candidate_config if available else replace(candidate_config, overrides=())
 
 
 def _group_rank(rows: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict[str, Any]]]:
@@ -274,11 +302,7 @@ def evaluate(candidates: list[dict[str, Any]], config: ScenarioConfig) -> dict[s
     # coverage rules retain relative to the unconstrained per-stratum tops
     # (1.0 = no representativeness cost). It is descriptive only and does not
     # influence selection.
-    coverage_efficiency = (
-        round(combined_score / independent_combined_score, 6)
-        if independent_combined_score
-        else None
-    )
+    coverage_efficiency = round(combined_score / independent_combined_score, 6) if independent_combined_score else None
     return {
         "config": config.to_dict(),
         "independent": independent,
@@ -308,4 +332,3 @@ def evaluate(candidates: list[dict[str, Any]], config: ScenarioConfig) -> dict[s
             ),
         },
     }
-

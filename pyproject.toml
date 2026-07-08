@@ -1,0 +1,47 @@
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+extend-exclude = '''
+/(node_modules|playwright-report|test-results|marketing/_frames|data/private|pipeline/cache|pipeline/work)/
+'''
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [
+  "node_modules",
+  "playwright-report",
+  "test-results",
+  "marketing/_frames",
+  "data/private",
+  "pipeline/cache",
+  "pipeline/work",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_configs = true
+check_untyped_defs = false
+exclude = [
+  "node_modules",
+  "playwright-report",
+  "test-results",
+  "marketing/_frames",
+  "data/private",
+  "pipeline/cache",
+  "pipeline/work",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["backend", "pipeline", "clients/python/rle_client"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 50

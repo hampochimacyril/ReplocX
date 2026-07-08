@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
-from backend.data_service import DataService
+from backend.data_service import DataService, _external_data_root
 
 
 class DataServiceTests(unittest.TestCase):
@@ -30,7 +31,10 @@ class DataServiceTests(unittest.TestCase):
         with self.assertRaisesRegex(LookupError, "demonstration crosswalk"):
             self.service.zip_lookup("00000")
 
+    def test_external_data_root_handles_shallow_container_path(self) -> None:
+        self.assertEqual(Path("/"), _external_data_root(Path("/app")))
+        self.assertEqual(Path("/Users"), _external_data_root(Path("/Users/example/Developer")))
+
 
 if __name__ == "__main__":
     unittest.main()
-
