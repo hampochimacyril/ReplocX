@@ -96,7 +96,8 @@ Rules:
 
 ## `/api/v1/results/by-stratum`
 
-Purpose: stratum summaries by climate, urbanicity, building type, or vintage.
+Purpose: certified summaries by climate, urbanicity, the complete 20-cell
+climate × urbanicity lattice, building type, or vintage.
 
 Payload:
 
@@ -130,6 +131,16 @@ Rules:
 
 - `dimension` is one of `climate`, `urbanicity`, `building`, or `vintage`.
 - `group_column` must name the grouping column in each row.
+- N3 adds `dimension=stratum` under contract `atlas.strata/1.0`. It returns
+  exactly 20 `strata` records and 80 metric rows (20 strata × A/C/B/D), with
+  `group_columns: ["climate_region", "urbanicity"]`.
+- The combined-stratum values are arithmetic means computed server-side from
+  the certified annual or seasonal `run_level_metrics` CSV. The response names
+  that CSV and its provenance sidecar; the browser may filter returned rows but
+  must not derive analytical aggregates.
+- Every combined-stratum scenario group is ordered `A`, `C`, `B`, `D` and
+  carries `certified_provenance` with R9 `PASS`, `f2v3_final`, and read-only
+  source status.
 
 ## `/api/v1/results/d-comparisons`
 

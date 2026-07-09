@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SelectionProvider } from "../../state/selection";
@@ -9,6 +9,7 @@ import { Exports } from "./Exports";
 import { Introduction } from "./Introduction";
 import { Provenance } from "./Provenance";
 import { SealedPassive } from "./SealedPassive";
+import { SimulationResults } from "./SimulationResults";
 import { buildF02SummaryOption, f02ParityValues } from "./metrics";
 import { SCENARIOS } from "./atlas";
 import type { MetricRow } from "../../lib/types";
@@ -70,6 +71,21 @@ const F02_ROWS: MetricRow[] = [
   { hvac_scenario: "B", scope: "annual", op_temp_mean_c: 23, op_temp_p95_true_c: 29, scenario_display_label: scenarioLabels.B },
   { hvac_scenario: "D", scope: "annual", op_temp_mean_c: 24, op_temp_p95_true_c: 33, scenario_display_label: scenarioLabels.D },
 ];
+const CLIMATES = ["Cold & Very Cold", "Hot-Dry & Mixed Dry", "Hot-Humid", "Marine", "Mixed-Humid"];
+const URBANICITIES = ["HDU", "LDU", "Rural", "Suburban"];
+const STRATA = CLIMATES.flatMap((climate, climateIndex) =>
+  URBANICITIES.map((urbanicity, urbanicityIndex) => {
+    const stratum_id = `stratum-${climateIndex}-${urbanicityIndex}`;
+    return {
+      stratum_id,
+      stratum_label: `${climate} · ${urbanicity}`,
+      climate_region: climate,
+      urbanicity,
+      location_label: `${climate} ${urbanicity}`,
+      scenario_cell_counts: { A: 9, C: 9, B: 9, D: 9 },
+    };
+  }),
+);
 
 function seedApi(enabled = true) {
   health.mockResolvedValue({ status: "ok", atlas_enabled: enabled });
@@ -97,17 +113,57 @@ function seedApi(enabled = true) {
       rows: F02_ROWS,
     },
   });
-  byStratum.mockResolvedValue({
-    tier: "annual",
-    dimension: "climate",
-    group_column: "climate_region",
-    source_csv: "04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/annual/by_climate.csv",
-    rows: SCENARIOS.map((scenario, index) => ({
-      climate_region: "Hot-Humid",
-      hvac_scenario: scenario,
-      scenario_display_label: scenarioLabels[scenario],
-      op_temp_p95_true_c_mean: [26, 30, 32, 36][index],
-    })),
+  byStratum.mockImplementation((tier: string, dimension: string) => {
+    const groups =
+      dimension === "stratum"
+        ? STRATA
+        : dimension === "urbanicity"
+          ? URBANICITIES.map((urbanicity) => ({ urbanicity }))
+          : dimension === "building"
+            ? [{ building_type: "SF" }]
+            : dimension === "vintage"
+              ? [{ vintage_group: "post1980" }]
+              : CLIMATES.map((climate_region) => ({ climate_region }));
+    const groupColumn =
+      dimension === "stratum"
+        ? "stratum_id"
+        : dimension === "urbanicity"
+          ? "urbanicity"
+          : dimension === "building"
+            ? "building_type"
+            : dimension === "vintage"
+              ? "vintage_group"
+              : "climate_region";
+    return Promise.resolve({
+      contract_version: "atlas.strata/1.0",
+      tier,
+      dimension,
+      group_column: groupColumn,
+      group_columns: dimension === "stratum" ? ["climate_region", "urbanicity"] : [groupColumn],
+      stratum_count: groups.length,
+      scenario_order: SCENARIOS,
+      strata: dimension === "stratum" ? STRATA : undefined,
+      certified_provenance: {
+        tier_id: "replocx_tmy3_wallfix_4scen",
+        r9_status: "PASS",
+        figure_registry_tier: "f2v3_final",
+        read_only: true,
+      },
+      source_csv:
+        dimension === "stratum"
+          ? `04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/${tier}/run_level_metrics.csv`
+          : `04_Analysis/_CANONICAL/10_DATA/replocx_tmy3_wallfix_4scen/${tier}/by_${dimension}.csv`,
+      rows: groups.flatMap((group, groupIndex) =>
+        SCENARIOS.map((scenario, scenarioIndex) => ({
+          ...group,
+          hvac_scenario: scenario,
+          scenario_display_label: scenarioLabels[scenario],
+          op_temp_p95_true_c_mean: 24 + groupIndex / 10 + scenarioIndex,
+          op_temp_hours_gt_28c_mean: groupIndex + scenarioIndex,
+          op_temp_max_c_mean: 25 + groupIndex / 10 + scenarioIndex,
+        })),
+      ),
+    });
   });
   figureSource.mockImplementation((figureId: string) =>
     Promise.resolve({
@@ -315,7 +371,17 @@ function seedApi(enabled = true) {
     export_views: [],
   });
   dashboard.mockResolvedValue({
-    scenario: { selected: [] },
+    scenario: {
+      selected: STRATA.map((item, index) => ({
+        climate_region: item.climate_region,
+        urbanicity: item.urbanicity,
+        urbanicity_short: item.urbanicity,
+        catchment_type: "CBSA",
+        catchment_code: String(10000 + index),
+        catchment_label: `${item.stratum_label} representative`,
+        location_uniqueness_key: `site-${index}`,
+      })),
+    },
     climate_distribution: {},
     urbanicity_distribution: {},
     kpis: {},
@@ -332,6 +398,7 @@ function renderAtlas(initial = "/atlas") {
           <Routes>
             <Route path="/atlas" element={<AtlasShell />}>
             <Route index element={<Introduction />} />
+            <Route path="results" element={<SimulationResults />} />
             <Route path="sealed-passive" element={<SealedPassive />} />
             <Route path="equity" element={<Equity />} />
             <Route path="exports" element={<Exports />} />
@@ -355,10 +422,42 @@ describe("Research Atlas", () => {
   it("renders the pivot-first landing with dictionary labels and MapLibre drill path", async () => {
     seedApi(true);
     renderAtlas();
-    await waitFor(() => expect(screen.getByRole("heading", { name: "National pivot" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("heading", { name: "20-stratum reviewer path" })).toBeInTheDocument());
     expect(screen.getAllByText("AC 2-8pm + NV other hours (C)").length).toBeGreaterThan(0);
     expect(screen.getAllByText("No AC or NV (D)").length).toBeGreaterThan(0);
+    expect(screen.getByText("20 climate × urbanicity strata")).toBeInTheDocument();
+    expect(screen.getByText("Cold & Very Cold · HDU")).toBeInTheDocument();
+    expect(screen.getByText("Mixed-Humid · Suburban")).toBeInTheDocument();
+    const siteLink = screen.getByRole("link", { name: "Mixed-Humid · Suburban representative" });
+    expect(siteLink).toHaveAttribute("href", expect.stringContaining("dimension=stratum"));
+    expect(siteLink).toHaveAttribute("href", expect.stringContaining("scenario=D"));
     expect(screen.getByRole("img", { name: "Atlas MapLibre drill map" })).toBeInTheDocument();
+  });
+
+  it("keeps tier, scenario, pivot level, and filters in shareable URL state", async () => {
+    seedApi(true);
+    renderAtlas("/atlas?tier=seasonal&scenario=C&dimension=stratum&climate=Marine");
+    await waitFor(() => expect(screen.getByText("4 climate × urbanicity strata")).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Cooling season" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "AC 2-8pm + NV other hours (C)" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByText("Marine · HDU")).toBeInTheDocument();
+    expect(screen.queryByText("Hot-Humid · HDU")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Urbanicity/ }));
+    await waitFor(() => expect(byStratum).toHaveBeenLastCalledWith("seasonal", "urbanicity"));
+    await waitFor(() => expect(screen.getByText("4 urbanicity groups")).toBeInTheDocument());
+  });
+
+  it("renders the full stratum contract in results without changing A/C/B/D order", async () => {
+    seedApi(true);
+    renderAtlas("/atlas/results?dimension=stratum&metric=op_temp_p95_true_c_mean&scenario=D");
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Results A/C/B/D" })).toBeInTheDocument());
+    expect(screen.getByText("20 of 20")).toBeInTheDocument();
+    expect(screen.getByText("atlas.strata/1.0")).toBeInTheDocument();
+    expect(screen.getByText("Climate × urbanicity (20 strata)")).toBeInTheDocument();
+    expect(byStratum).toHaveBeenCalledWith("annual", "stratum");
   });
 
   it("renders the D story route on the D-B, D-C, and D-A contrasts", async () => {
