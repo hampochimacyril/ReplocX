@@ -2,45 +2,34 @@ import { useMemo, useState } from "react";
 import { EChart } from "../../components/EChart";
 import { LoadingState, ErrorState } from "../../components/states/States";
 import { Tag } from "../../components/ui/Tag";
-import { useAtlasControls, useDComparisons, useFigureSource, useScenarioSummary, fmt, SCENARIO_COLOR } from "./atlas";
-import { thresholdNote, valueOf } from "./metrics";
-import type { MetricRow } from "../../lib/types";
+import { useAtlasControls, useDComparisons, useFigureSource, useScenarioSummary, fmt } from "./atlas";
+import {
+  D_COMPARISON_METRICS,
+  buildDComparisonOption,
+  dComparisonMetric,
+  thresholdNote,
+  type DComparisonMetricKey,
+} from "./metrics";
+import type { Scenario } from "../../lib/types";
 
 type StoryKey = "D-B" | "D-C" | "D-A";
 
-const STORY: Record<StoryKey, { figure: string; label: string; short: string }> = {
-  "D-B": { figure: "Fig05", label: "Natural ventilation effect without AC", short: "D-B" },
-  "D-C": { figure: "Fig06", label: "Peak-window AC plus outside-window NV effect", short: "D-C" },
-  "D-A": { figure: "Fig07", label: "Full active-cooling protection", short: "D-A" },
+const STORY: Record<StoryKey, { figure: string; label: string; short: string; intervention: Scenario }> = {
+  "D-B": { figure: "Fig05", label: "Natural ventilation effect without AC", short: "D-B", intervention: "B" },
+  "D-C": {
+    figure: "Fig06",
+    label: "Peak-window AC plus outside-window NV effect",
+    short: "D-C",
+    intervention: "C",
+  },
+  "D-A": { figure: "Fig07", label: "Full active-cooling protection", short: "D-A", intervention: "A" },
 };
-
-const METRIC = {
-  key: "op_temp_hours_gt_28c_reduction",
-  label: "Overheating exposure hours reduced",
-};
-
-function comparisonChart(rows: MetricRow[], story: StoryKey) {
-  return {
-    tooltip: { trigger: "axis" },
-    grid: { left: 58, right: 12, top: 18, bottom: 58 },
-    xAxis: { type: "category", data: rows.map((row) => String(row.climate_short ?? row.climate_region)), axisLabel: { interval: 0, rotate: 18, fontSize: 10 } },
-    yAxis: { type: "value", name: "hours" },
-    series: [
-      {
-        name: STORY[story].label,
-        type: "bar",
-        itemStyle: { color: SCENARIO_COLOR.D },
-        data: rows.map((row) => valueOf(row, METRIC.key)),
-        barWidth: "56%",
-      },
-    ],
-  };
-}
 
 /** D story panel: sealed-passive contrasts first, raw D values behind explore. */
 export function SealedPassive() {
   const { tier, scenarioLabels } = useAtlasControls();
   const [story, setStory] = useState<StoryKey>("D-B");
+  const [metricKey, setMetricKey] = useState<DComparisonMetricKey>("op_temp_hours_gt_28c_reduction");
   const comparisons = useDComparisons(tier);
   const summary = useScenarioSummary(tier);
   const f05 = useFigureSource("Fig05");
@@ -48,7 +37,14 @@ export function SealedPassive() {
   const f07 = useFigureSource("Fig07");
 
   const source = story === "D-B" ? f05 : story === "D-C" ? f06 : f07;
-  const option = useMemo(() => (source.data ? comparisonChart(source.data.rows, story) : undefined), [source.data, story]);
+  const metric = dComparisonMetric(metricKey);
+  const option = useMemo(
+    () =>
+      source.data
+        ? buildDComparisonOption(source.data.rows, metricKey, STORY[story].label, STORY[story].intervention)
+        : undefined,
+    [metricKey, source.data, story],
+  );
 
   if (comparisons.isLoading || summary.isLoading || f05.isLoading || f06.isLoading || f07.isLoading) {
     return <LoadingState label="Loading sealed-passive contrasts…" />;
@@ -100,14 +96,28 @@ export function SealedPassive() {
           <div>
             <h2>{STORY[story].label}</h2>
             <p className="muted">
-              {METRIC.label} from {scenarioLabels.D} ({story}); {thresholdNote("28c")}
+              {metric.label} from {scenarioLabels.D} ({story}). {metric.note}
             </p>
           </div>
           <Tag tone="info">f2v3_final</Tag>
         </div>
-        <EChart option={option} ariaLabel={`${story} overheating exposure-hour reduction by climate`} height={270} />
+        <div className="atlas-thresholds" role="group" aria-label="Certified static figure panel">
+          {D_COMPARISON_METRICS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={metricKey === item.key ? "active" : ""}
+              aria-pressed={metricKey === item.key}
+              onClick={() => setMetricKey(item.key)}
+            >
+              {item.shortLabel}
+            </button>
+          ))}
+        </div>
+        <EChart option={option} ariaLabel={`${story} ${metric.label} by climate`} height={300} />
         <p className="chart-note">
-          Source CSV: <code>{source.data.source_csv}</code>. {METRIC.label}; {thresholdNote("28c")}
+          Interactive twin of {STORY[story].figure}, panel: {metric.label}. Source CSV:{" "}
+          <code>{source.data.source_csv}</code>. {metric.note}
         </p>
       </section>
 

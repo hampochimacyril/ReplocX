@@ -1,5 +1,125 @@
 # Session Handoff
 
+## Session N5 — B1/C1 real container boundary
+
+- Date: July 9, 2026.
+- Branch/worktree: `codex/atlas-release-candidate` at
+  `/private/tmp/Developer-atlas-release`.
+- Starting point: N3 commit `f8a417c` plus the already executed N4 chart
+  parity corrections. No push, pull request, public DNS, production
+  credential, or live deployment.
+- Goal: prove the committed Caddy plus app boundary using actual containers,
+  scan the actual saved image/rootfs layers, exercise the two-layer auth
+  matrix, and verify all analytical mounts are read-only.
+
+### Runtime preparation
+
+- Installed Docker Desktop 4.81.0 from Docker's official Apple-silicon
+  distribution after the original machine had no container runtime.
+- The DMG checksum verified. macOS code-signing and Gatekeeper checks passed
+  outside the restricted sandbox: valid on disk, designated requirement
+  satisfied, and accepted as a Notarized Developer ID from Docker Inc
+  (`9BNSXJN65R`).
+- Measured runtime: Docker Engine 29.6.1, Linux/arm64; Compose plugin present.
+- The earlier signature-invalid Podman payload was not installed or executed.
+
+### Real-build defects found and fixed
+
+N5 did not rubber-stamp the first image:
+
+1. Root-only `node_modules/` and `dist/` ignore rules admitted 463 MB of host
+   frontend dependencies and stale compiled assets into the build context.
+   Nested rules reduced the effective context to approximately 8 KB and left
+   exactly five current production assets.
+2. `backend/atlas_service.py` baked the owner's absolute canonical OneDrive
+   paths into public runtime code. Defaults are now the container-safe
+   `/atlas` and `/atlas-figures`; environment overrides remain authoritative.
+3. Nested host Python bytecode entered the image and preserved the removed
+   path. Nested `__pycache__`/`*.py[cod]` exclusions now prevent that.
+
+Regression assertions cover the container-safe defaults, nested ignore rules,
+and absence of `/Users/` in the runtime Atlas service source.
+
+### Actual image/layer evidence
+
+- Public image:
+  `sha256:f821629698b257642a6fa5fc3380f7e5c243725bbe322ca59661bf0de42d0c7a`,
+  59,253,207 bytes, Linux/arm64.
+- Compose image:
+  `sha256:9b8482a6cffd84a2923f0c5307280f6ac0e2f81d146a012a2c1941d4035ccb41`.
+- Both images had the same 13 root filesystem diff IDs.
+- Corrected merged rootfs: 30 app files, five frontend assets, zero host
+  bytecode, zero provenance/checksum sidecars, zero canonical f2v3 asset
+  basename collisions, and zero owner-path or disposable-secret hits.
+- All 13 saved compressed layers were scanned; zero private-path or
+  disposable-secret hits.
+- Saved image SHA-256:
+  `8701ac748331aca2e2ba81be792e70ca7ad3614351966954c52d76b7b7461b24`.
+- Exported rootfs SHA-256:
+  `5dc6e07751c5d302a522a3a21a922212f7473fe43f9b71dda5750599e6c6495f`.
+
+The certified tier and f2v3 labels remain intentional code-level contract
+identifiers. No certified row, asset, sidecar, secret, or owner-specific host
+path is baked into the image.
+
+### Actual Caddy/Compose evidence
+
+- Started the committed `docker-compose.atlas-private.example.yml` and
+  `deploy/atlas-private/Caddyfile` with disposable credentials, the actual
+  selection analysis root, and the certified Atlas data/figure roots.
+- Only Caddy published `443:443`. The app exposed `8787` only to the internal
+  network and had an empty host port-binding map.
+- Auth matrix:
+  - frontend without Basic auth: 401;
+  - certified API without Basic auth: 401;
+  - certified API with Basic auth only: 401 from the app token gate;
+  - certified API with Basic auth plus app token: 200;
+  - frontend with Basic auth: 200.
+- Effective mounts:
+  `/analysis`, `/atlas`, and `/atlas-figures` were read-only binds; `/state`
+  was the only writable named volume.
+- Explicit write probes against all three analytical mounts failed with
+  `Read-only file system`.
+
+### Certified audit through the proxy
+
+- Overview: 720 cells, A/C/B/D, `atlas.w1/1.0`.
+- N3 stratum route: 20 metadata records, 80 scenario rows, nine certified
+  cells per stratum/scenario, R9 PASS, `f2v3_final`.
+- Equity: 20 profiles, 4/4 READY, zero `REVIEW REQUIRED`.
+- Exports: four views, 19 figure bundles, and the four-row annual
+  scenario-summary export with read-only source metadata.
+- Logs: 20 app lines and 29 proxy lines; zero secret, owner-path, canonical
+  asset-name, or certified-row hits.
+- Named volumes held no canonical data, figures, sidecars, or app token.
+
+### Verification and cleanup
+
+- Targeted backend Atlas/contract suite: **33 passed**.
+- Frontend typecheck: passed.
+- Targeted Atlas frontend suite: **9 passed**.
+- `scripts/check_atlas_release.py` with explicit certified roots: **PASS**.
+- The stack was stopped with `docker compose down -v`. All N5 containers,
+  networks, named volumes, and the port-443 binding were removed. The verified
+  image remains local for review.
+- Durable evidence:
+  `docs/atlas/N5_CONTAINER_BOUNDARY_AUDIT_2026-07-09.md`.
+
+### Gate and exact next starting point
+
+N5 gate: **PASS**. Actual image layers are clean; the actual Caddy/app stack
+passes unauthenticated, Basic-only, and Basic-plus-app-token cases; all
+analytical write probes fail; and certified route/export/equity results match
+the local candidate.
+
+Start N6 only after the owner supplies the approved host/platform, private DNS
+name, reviewer/access owner, production secret source, network/VPN policy,
+retention/backup owner, exact private repository/branch, and budget approval.
+
+Stop honored: no public DNS, production credential, push, pull request, or live
+deployment. Temporary containers, networks, volumes, credentials, and local
+test certificates were removed.
+
 ## Session N3 — A2 full 20-stratum Atlas pivot
 
 - Date: July 8, 2026.

@@ -9,12 +9,16 @@
 .ruff_cache
 .pytest_cache
 __pycache__/
+**/__pycache__/
 *.py[cod]
+**/*.py[cod]
 node_modules/
+**/node_modules/
 coverage/
 .coverage
 .coverage.*
 dist/
+**/dist/
 *.tsbuildinfo
 playwright-report/
 test-results/

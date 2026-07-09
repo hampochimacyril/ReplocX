@@ -52,9 +52,13 @@ Atlas release path. `TO CONFIRM` items are completed before live deployment.
   `deploy/atlas-private/Caddyfile`; real mounts are `:ro`.
 - The public Docker runtime now uses an allowlist and explicitly keeps
   `RLE_ENABLE_ATLAS=0`.
-- Live deploy remains blocked on the `TO CONFIRM` owner/infrastructure fields
-  and branch reconciliation. Local W4 verification passed on July 8, 2026; it
-  is not owner sign-off or evidence of a live container deployment.
+- N5 exercised the committed boundary as real containers on July 9, 2026:
+  actual image/layer leak scan PASS; Caddy 401 / app-token 401 / authorized
+  200 matrix PASS; app host port absent; all analytical bind mounts read-only;
+  certified route, equity, and export audit PASS. Evidence:
+  `docs/atlas/N5_CONTAINER_BOUNDARY_AUDIT_2026-07-09.md`.
+- Live deploy remains blocked on the `TO CONFIRM` owner/infrastructure fields.
+  N5 is local container verification, not a live deployment or owner sign-off.
 
 ### Historical Render alternative confirmed June 8, 2026
 
