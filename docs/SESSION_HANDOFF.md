@@ -1,5 +1,61 @@
 # Session Handoff
 
+## Session N6 — B1 owner-assisted private deployment preflight
+
+- Date: July 9, 2026.
+- Branch/worktree: `codex/atlas-release-candidate` at
+  `/private/tmp/Developer-atlas-release`.
+- Runtime release commit prepared for deployment:
+  `a13157dddb618352d4897df096238c676b7b0513`
+  (`atlas(n4-n5): verify parity and container boundary`).
+- Owner approval granted in-chat to execute and download what is needed for
+  N6. This approval covers local/external command execution and required
+  downloads, but no concrete live host, DNS name, firewall/VPN policy, secret
+  manager path, or backup owner was discoverable in the workspace or shell
+  environment.
+
+### Preflight executed
+
+- Confirmed the clean release worktree is ahead of `origin/main` by nine
+  commits with no uncommitted changes before the N6 documentation update.
+- Confirmed Docker is available at `/usr/local/bin/docker`.
+- Confirmed the configured Git remote is
+  `https://github.com/hampochimacyril/Location-representation-explorer.git`.
+  `git ls-remote origin HEAD` resolved to `c0fb5cb`; the unauthenticated public
+  GitHub API returned `404`, so the repository is not publicly discoverable
+  through that endpoint.
+- Environment-name scan found only `GH_PAGER` and `SSH_AUTH_SOCK` among
+  deployment/cloud-related names. No `RLE_*`, cloud-provider, deploy-host, DNS,
+  or secret-manager variables were present.
+- Re-ran the W4/N3/N5 release smoke with explicit certified data and figure
+  roots. Result: **PASS**. Evidence included the Basic-auth proxy block,
+  app-token block, authorized 200 responses, 720 cells, A/C/B/D, R9 PASS,
+  `f2v3_final`, full 20-stratum route checks, equity READY with 4/4 layers and
+  20 records, public-disabled 404 regressions, and Docker build-context/runtime
+  allowlist checks.
+- `git diff --check`: **PASS**.
+- `python3 -m unittest tests.test_atlas`: **26 passed, 2 skipped**.
+
+### Gate state
+
+N6 live deployment is **not complete**. The release candidate is prepared, local
+preflight is green, and command/download approval is recorded, but there is no
+actual provisionable target. The following owner/infrastructure values remain
+required before any live deployment command can be run:
+
+- approved VM/host or provider account;
+- private DNS name;
+- access-control owner and reviewer list;
+- secret-manager source/path for Basic auth and `RLE_PRIVATE_AUTH_TOKEN`;
+- allowed VPN/IP ranges or network policy;
+- retention/backup owner and scenario database policy;
+- exact host mount paths for `/analysis`, `/atlas`, and `/atlas-figures`;
+- explicit confirmation that this GitHub remote/branch is the intended private
+  release repository.
+
+Stop honored: no live host was provisioned, no production DNS was created, no
+production secret was generated or stored, and no reviewer URL exists yet.
+
 ## Session N5 — B1/C1 real container boundary
 
 - Date: July 9, 2026.

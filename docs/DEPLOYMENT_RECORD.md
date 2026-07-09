@@ -36,11 +36,11 @@ Atlas release path. `TO CONFIRM` items are completed before live deployment.
 | National/Atlas data delivery | Out-of-band read-only mounts; the public-safe image does not bake `pipeline/out`, `data/atlas`, or f2v3 assets |
 | Data-retention rules | Certified inputs are immutable/reproducible. Scenario database retention and purge policy — **TO CONFIRM** |
 | Backup owner | **TO CONFIRM** (owns VM snapshots and SQLite backup/restore drills) |
-| Budget | **TO CONFIRM** (VM, storage/snapshots, DNS, and monitoring) |
+| Budget | Command/download approval granted July 9, 2026; VM, storage/snapshots, DNS, and monitoring spend owner **TO CONFIRM** |
 | Secret manager | **TO CONFIRM** source of truth for Basic credentials and `RLE_PRIVATE_AUTH_TOKEN`; never commit secrets or plaintext hashes |
 | Error tracking | Optional Sentry via `RLE_SENTRY_DSN` — **TO CONFIRM** whether enabled |
 | TLS | Caddy-managed TLS for the approved private DNS name |
-| Exact private repository | **TO CONFIRM** before publication |
+| Exact private repository | Candidate remote `https://github.com/hampochimacyril/Location-representation-explorer.git`, branch `codex/atlas-release-candidate`; owner must confirm this remains the intended private release repository before live deployment |
 
 ### Research Atlas W4 addendum (July 8, 2026)
 
@@ -140,6 +140,7 @@ credentials, Docker Engine, and the certified read-only host paths from §2.
 | --- | --- | --- | --- |
 | 2026-06-08 | Session 11 | Prepared private blueprint, runbook, and local verification | Local production verification PASS; live deploy pending owner |
 | 2026-07-08 | Session 17 / W4 | Prepared Atlas Basic+app-token boundary, read-only mounts, public-image allowlist, and clarified selection-demo vs certified-Atlas UI state | Local W4 verification PASS; live deploy and owner sign-off pending |
+| 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; remote reachable; certified smoke PASS; no host/DNS/secret-manager/network target found | Release branch ready for publication; live deploy remains blocked on concrete infrastructure values |
 | _TBD_ | _owner_ | Executed private deploy + post-deploy smoke | _record URL, smoke results_ |
 
 ## 6. Owner sign-off and production release tag
