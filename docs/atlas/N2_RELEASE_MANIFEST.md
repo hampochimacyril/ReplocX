@@ -1,5 +1,13 @@
 # N2 clean Atlas release manifest
 
+> **Owner approval and execution (2026-07-08):** The owner approved this
+> manifest and seven-commit sequence before N3 began. The local commits are
+> `d58c993`, `337c48a`, `bf1e0dd`, `9e97a42`, `d6e2dc1`, `763a2af`, and
+> `fa66b47`. No push or pull request was created. The worktree was subsequently
+> moved to `/private/tmp/Developer-atlas-release` so N3 could run in the
+> session's writable sandbox; the branch remains
+> `codex/atlas-release-candidate`.
+
 **Prepared:** 2026-07-08
 
 **Worktree:** `/Users/cch322/Developer-atlas-release`

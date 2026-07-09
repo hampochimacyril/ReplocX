@@ -237,12 +237,31 @@ def _private_smoke(data_dir: Path, figure_dir: Path) -> None:
             routes.extend(
                 f"/api/v1/results/by-stratum?tier={tier}&dimension={dimension}"
                 for tier in ("annual", "seasonal")
-                for dimension in ("climate", "urbanicity", "building", "vintage")
+                for dimension in ("climate", "urbanicity", "stratum", "building", "vintage")
             )
             for route in routes:
                 status, payload = _json_get(f"{app}{route}", APP_HEADER)
                 _check(status == 200, f"{route} returns 200")
                 _assert_current_payload(payload, route)
+                if "dimension=stratum" in route:
+                    _check(payload["contract_version"] == "atlas.strata/1.0", f"{route} uses N3 contract")
+                    _check(payload["stratum_count"] == 20, f"{route} exposes 20 strata")
+                    _check(len(payload["rows"]) == 80, f"{route} exposes 80 A/C/B/D rows")
+                    _check(
+                        all(
+                            row["n_cells"] == atlas_service.CERTIFIED_CELLS_PER_STRATUM_SCENARIO
+                            for row in payload["rows"]
+                        ),
+                        f"{route} retains nine certified cells per stratum/scenario",
+                    )
+                    _check(
+                        payload["certified_provenance"]["r9_status"] == "PASS",
+                        f"{route} retains R9 provenance",
+                    )
+                    _check(
+                        payload["certified_provenance"]["figure_registry_tier"] == "f2v3_final",
+                        f"{route} retains f2v3 provenance",
+                    )
 
 
 def _public_smoke() -> None:
@@ -261,6 +280,7 @@ def _public_smoke() -> None:
         for route in (
             "/api/v1/results/overview",
             "/api/v1/results/provenance",
+            "/api/v1/results/by-stratum?dimension=stratum",
             "/api/v1/equity/profiles",
             "/api/v1/equity/scenario-cross",
         ):

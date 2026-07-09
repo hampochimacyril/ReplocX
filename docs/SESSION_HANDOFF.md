@@ -1,5 +1,113 @@
 # Session Handoff
 
+## Session N3 — A2 full 20-stratum Atlas pivot
+
+- Date: July 8, 2026.
+- Branch: `codex/atlas-release-candidate`.
+- Worktree: `/private/tmp/Developer-atlas-release` (moved from the N2
+  `/Users/cch322/Developer-atlas-release` path into the session's writable
+  sandbox).
+- Starting point: owner-approved N2 series at `fa66b47`, seven local commits
+  ahead of `origin/main`; no push or pull request.
+- Goal: make the landing and comparison flow cover all five climate regions ×
+  four urbanicity groups while retaining A/C/B/D, D semantics, R9/f2v3
+  provenance, and the public-disable boundary.
+
+### N2 approval boundary resolved
+
+The owner explicitly approved `docs/atlas/N2_RELEASE_MANIFEST.md` and its
+seven-commit series before N3 work began. The commits are:
+
+1. `d58c993` — application foundation.
+2. `337c48a` — W0 contracts.
+3. `bf1e0dd` — W1 certified results API.
+4. `9e97a42` — W2 guided Atlas UI.
+5. `d6e2dc1` — W3 exports/provenance/equity builder.
+6. `763a2af` — W4 private container boundary.
+7. `fa66b47` — N2 manifest and verification.
+
+No commit was pushed and no pull request was opened.
+
+### What changed
+
+- Added the stable `atlas.strata/1.0` response for
+  `/api/v1/results/by-stratum?dimension=stratum`.
+- The backend reads the certified annual or seasonal
+  `run_level_metrics` CSV and groups server-side by `climate_region`,
+  `urbanicity`, and `hvac_scenario`. It returns:
+  - 20 stable stratum metadata records;
+  - 80 metric rows per tier;
+  - nine certified cells in every real-data stratum/scenario bucket;
+  - scenario order `A`, `C`, `B`, `D`;
+  - source CSV/sidecar plus R9 `PASS`, `f2v3_final`, and read-only provenance.
+- Extended fixture and backend tests across every one of the 20 combinations
+  for both annual and seasonal tiers.
+- Reworked the landing pivot into a guided
+  `climate → urbanicity → 20 strata → representative site` path. The full
+  lattice is the default; climate and urbanicity filters only filter
+  server-returned rows.
+- Added friendly labels/tooltips, per-stratum site links, a reviewer breadcrumb
+  on site detail, and a return link to the exact shared pivot state.
+- Made tier, scenario, dimension, climate, urbanicity, stratum, metric, and
+  threshold URL-backed; Atlas section navigation retains the query state.
+- Extended the results surface to chart/filter the combined strata and report
+  contract/source metadata. D comparison code and semantics were not changed.
+- Updated the W0 contract record and added
+  `docs/atlas/N3_20_STRATUM_CONTRACT.md`.
+
+### Screenshot evidence
+
+Visually inspected under `docs/atlas/screenshots/2026-07-08-n3/`:
+
+- `atlas-n3-20-strata.png`;
+- `atlas-n3-urbanicity-pivot.png`;
+- `atlas-n3-site-drill.png`;
+- `atlas-n3-results-strata.png`.
+
+These show the complete 20-row lattice, the urbanicity step, stratum-to-site
+drill-down, and the 20-stratum results view.
+
+### Verification (local, July 8, 2026)
+
+- Targeted backend:
+  `.venv/bin/python -m unittest tests.test_atlas tests.test_atlas_contract -v`:
+  **33 passed**.
+- Targeted frontend Atlas unit suite: **9 passed**; TypeScript typecheck passed.
+- Frontend lint/build: **0 errors / 3 pre-existing fast-refresh warnings**;
+  production build passed.
+- Enabled canonical Atlas Playwright: **1 passed, 1 expected disabled-mode
+  skip**. It exercised all 20 strata, site drill, urbanicity pivot, combined
+  results, A/C/B/D, D contrasts, equity, and exports.
+- Disabled public-demo Playwright: **1 passed, 1 expected enabled-mode skip**;
+  `/api/v1/results/by-stratum?dimension=stratum` returned **404**.
+- `.venv/bin/python scripts/check_atlas_release.py`: **PASS** after extending
+  the audit to both annual/seasonal 20-stratum routes (20 metadata records, 80
+  A/C/B/D rows, R9 PASS, `f2v3_final`) and the disabled-route 404 check.
+- `scripts/verify_all.sh`: **all checks passed**.
+  - fixture build/validation passed;
+  - bundled and regenerated-output backend suites: **121 tests each**;
+  - ruff, black, mypy, API/security contract, and runtime dependency audit
+    passed;
+  - coverage: **72%**;
+  - frontend: typecheck/build passed, lint 0 errors/3 existing warnings, and
+    **52 tests passed**;
+  - frontend production audit retained one known moderate ECharts advisory,
+    below the configured high-severity failure gate;
+  - full public-disabled Playwright: **13 passed, 1 expected skip**.
+- `git diff --check`: passed before the final handoff update.
+
+### Gate and exact next starting point
+
+N3 gate: **PASS**. All 20 strata are directly visible/reachable; scenario order
+is A/C/B/D; the D-B/D-C/D-A implementation is unchanged; the public deployment
+still blocks the new private API; and four screenshots prove the reviewer path.
+
+Start N4 from this branch by enumerating every f2v3 registry figure and mapping
+each intended interactive twin (or documented non-applicable entry) in the
+parity manifest. Do not deploy or change infrastructure.
+
+Stop honored: no deployment or infrastructure changes; no push or pull request.
+
 ## Session N2 — Clean, reviewable Atlas release branch
 
 - Date: July 8, 2026

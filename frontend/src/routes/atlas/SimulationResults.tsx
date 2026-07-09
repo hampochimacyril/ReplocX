@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { EChart } from "../../components/EChart";
 import { LoadingState, ErrorState } from "../../components/states/States";
 import {
@@ -34,11 +35,18 @@ function groupedOption(
   unit: string,
 ) {
   const groups = Array.from(new Set(rows.map((row) => String(row[groupCol]))));
+  const groupLabels = groups.map((group) => {
+    const row = rows.find((item) => String(item[groupCol]) === group);
+    return String(row?.stratum_label ?? group);
+  });
   return {
-    tooltip: { trigger: "axis" },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+    },
     legend: { top: 0 },
     grid: { left: 62, right: 12, top: 34, bottom: 66 },
-    xAxis: { type: "category", data: groups, axisLabel: { interval: 0, rotate: 22, fontSize: 10 } },
+    xAxis: { type: "category", data: groupLabels, axisLabel: { interval: 0, rotate: groups.length > 8 ? 38 : 22, fontSize: 10 } },
     yAxis: { type: "value", name: unit },
     series: SCENARIOS.map((scenario: Scenario) => ({
       name: compactScenarioLabel(scenario, labels),
@@ -87,11 +95,46 @@ function scenarioOverviewOption(rows: MetricRow[], threshold: ThresholdKey, labe
 /** Guided A/C/B/D results with p95 and exposure-hour metrics first. */
 export function SimulationResults() {
   const { tier, scenarioLabels } = useAtlasControls();
+  const [searchParams, setSearchParams] = useSearchParams();
   const summary = useScenarioSummary(tier);
-  const [dimension, setDimension] = useState<StratumDimension>("climate");
-  const [metric, setMetric] = useState<AtlasMetricKey>(DEFAULT_METRIC);
-  const [threshold, setThreshold] = useState<ThresholdKey>(DEFAULT_THRESHOLD);
+  const dimensionParam = searchParams.get("dimension") as StratumDimension | null;
+  const dimension = STRATUM_DIMENSIONS.some((item) => item.key === dimensionParam)
+    ? (dimensionParam as StratumDimension)
+    : "stratum";
+  const metricParam = searchParams.get("metric") as AtlasMetricKey | null;
+  const metric = METRICS.some((item) => item.key === metricParam) ? (metricParam as AtlasMetricKey) : DEFAULT_METRIC;
+  const thresholdParam = searchParams.get("threshold") as ThresholdKey | null;
+  const threshold = THRESHOLDS.some((item) => item.key === thresholdParam)
+    ? (thresholdParam as ThresholdKey)
+    : DEFAULT_THRESHOLD;
+  const climateFilter = searchParams.get("climate") ?? "";
+  const urbanicityFilter = searchParams.get("urbanicity") ?? "";
+  const setResultParam = (key: string, value: string) => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        if (key === "dimension" && value !== "stratum") {
+          next.delete("climate");
+          next.delete("urbanicity");
+          next.delete("stratum");
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
   const stratum = useByStratum(tier, dimension);
+  const displayRows = useMemo(
+    () =>
+      (stratum.data?.rows ?? []).filter(
+        (row) =>
+          (dimension !== "stratum" || !climateFilter || row.climate_region === climateFilter) &&
+          (dimension !== "stratum" || !urbanicityFilter || row.urbanicity === urbanicityFilter),
+      ),
+    [climateFilter, dimension, stratum.data?.rows, urbanicityFilter],
+  );
 
   const selectedMetric = metric === "op_temp_hours_gt_28c_mean" ? metricByKey(thresholdMetricKey(threshold)) : metricByKey(metric);
   const pairedMetric = selectedMetric.pairedKey ? metricByKey(selectedMetric.pairedKey) : null;
@@ -104,23 +147,23 @@ export function SimulationResults() {
   const primaryOption = useMemo(
     () =>
       stratum.data
-        ? groupedOption(stratum.data.rows, stratum.data.group_column, selectedMetric.key, scenarioLabels, selectedMetric.unit)
+        ? groupedOption(displayRows, stratum.data.group_column, selectedMetric.key, scenarioLabels, selectedMetric.unit)
         : undefined,
-    [scenarioLabels, selectedMetric.key, selectedMetric.unit, stratum.data],
+    [displayRows, scenarioLabels, selectedMetric.key, selectedMetric.unit, stratum.data],
   );
   const pairedOption = useMemo(
     () =>
       pairedMetric && stratum.data
-        ? groupedOption(stratum.data.rows, stratum.data.group_column, pairedMetric.key, scenarioLabels, pairedMetric.unit)
+        ? groupedOption(displayRows, stratum.data.group_column, pairedMetric.key, scenarioLabels, pairedMetric.unit)
         : undefined,
-    [pairedMetric, scenarioLabels, stratum.data],
+    [displayRows, pairedMetric, scenarioLabels, stratum.data],
   );
   const exposureOption = useMemo(
     () =>
       exposureCompanion && stratum.data
-        ? groupedOption(stratum.data.rows, stratum.data.group_column, exposureCompanion.key, scenarioLabels, exposureCompanion.unit)
+        ? groupedOption(displayRows, stratum.data.group_column, exposureCompanion.key, scenarioLabels, exposureCompanion.unit)
         : undefined,
-    [exposureCompanion, scenarioLabels, stratum.data],
+    [displayRows, exposureCompanion, scenarioLabels, stratum.data],
   );
 
   if (summary.isLoading || stratum.isLoading) return <LoadingState label="Loading A/C/B/D results…" />;
@@ -157,7 +200,7 @@ export function SimulationResults() {
                 type="button"
                 className={threshold === item.key ? "active" : ""}
                 aria-pressed={threshold === item.key}
-                onClick={() => setThreshold(item.key)}
+                onClick={() => setResultParam("threshold", item.key)}
               >
                 {item.label}
               </button>
@@ -172,7 +215,7 @@ export function SimulationResults() {
         <div className="atlas-inline-controls">
           <label>
             Dimension{" "}
-            <select value={dimension} onChange={(e) => setDimension(e.target.value as StratumDimension)}>
+            <select value={dimension} onChange={(e) => setResultParam("dimension", e.target.value)}>
               {STRATUM_DIMENSIONS.map((d) => (
                 <option key={d.key} value={d.key}>
                   {d.label}
@@ -182,7 +225,7 @@ export function SimulationResults() {
           </label>
           <label>
             Metric{" "}
-            <select value={metric} onChange={(e) => setMetric(e.target.value as AtlasMetricKey)}>
+            <select value={metric} onChange={(e) => setResultParam("metric", e.target.value)}>
               {METRICS.map((m) => (
                 <option key={m.key} value={m.key}>
                   {m.label}
@@ -190,6 +233,28 @@ export function SimulationResults() {
               ))}
             </select>
           </label>
+          {dimension === "stratum" && (
+            <>
+              <label>
+                Climate{" "}
+                <select value={climateFilter} onChange={(e) => setResultParam("climate", e.target.value)}>
+                  <option value="">All climate regions</option>
+                  {Array.from(new Set((stratum.data?.strata ?? []).map((item) => item.climate_region))).map(
+                    (climate) => <option key={climate}>{climate}</option>,
+                  )}
+                </select>
+              </label>
+              <label>
+                Urbanicity{" "}
+                <select value={urbanicityFilter} onChange={(e) => setResultParam("urbanicity", e.target.value)}>
+                  <option value="">All urbanicity groups</option>
+                  {Array.from(new Set((stratum.data?.strata ?? []).map((item) => item.urbanicity))).map(
+                    (urbanicity) => <option key={urbanicity}>{urbanicity}</option>,
+                  )}
+                </select>
+              </label>
+            </>
+          )}
         </div>
 
         <h2>{selectedMetric.label}</h2>
@@ -225,6 +290,10 @@ export function SimulationResults() {
           <dd>{selectedMetric.key.includes("hours_gt") || exposureCompanion ? thresholdNote(threshold) : "Not thresholded"}</dd>
           <dt>Tier</dt>
           <dd>{tier}</dd>
+          <dt>Strata shown</dt>
+          <dd>{new Set(displayRows.map((row) => String(row[groupCol]))).size} of {stratum.data.stratum_count}</dd>
+          <dt>Contract</dt>
+          <dd>{stratum.data.contract_version ?? "legacy aggregate contract"}</dd>
           <dt>Source CSV</dt>
           <dd><code>{stratum.data.source_csv}</code></dd>
         </dl>
@@ -241,7 +310,7 @@ export function SimulationResults() {
               </tr>
             </thead>
             <tbody>
-              {stratum.data.rows.map((row, i) => {
+              {displayRows.map((row, i) => {
                 const scenario = String(row.hvac_scenario) as Scenario;
                 return (
                   <tr key={i}>

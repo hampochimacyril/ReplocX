@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
   FlaskConical,
@@ -71,8 +70,26 @@ function Segmented<T extends string>({
  */
 export function AtlasShell() {
   const health = useHealth();
-  const [tier, setTier] = useState<AtlasTier>("annual");
-  const [scenario, setScenario] = useState<Scenario>("D");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tierParam = searchParams.get("tier");
+  const scenarioParam = searchParams.get("scenario");
+  const tier: AtlasTier = tierParam === "seasonal" ? "seasonal" : "annual";
+  const scenario: Scenario =
+    scenarioParam === "A" || scenarioParam === "C" || scenarioParam === "B" || scenarioParam === "D"
+      ? scenarioParam
+      : "D";
+  const setControl = (key: "tier" | "scenario", value: AtlasTier | Scenario) => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.set(key, value);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const setTier = (value: AtlasTier) => setControl("tier", value);
+  const setScenario = (value: Scenario) => setControl("scenario", value);
   const enabled = health.data?.atlas_enabled ?? false;
   const dictionary = useScenarioDictionary(enabled);
 
@@ -96,7 +113,15 @@ export function AtlasShell() {
           </Tag>
         </div>
         {SUB_NAV.map(({ to, label, Icon, end }) => (
-          <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink
+            key={to}
+            to={{
+              pathname: to,
+              search: searchParams.toString() ? `?${searchParams.toString()}` : "",
+            }}
+            end={end}
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
             <Icon size={16} aria-hidden />
             <span>{label}</span>
           </NavLink>

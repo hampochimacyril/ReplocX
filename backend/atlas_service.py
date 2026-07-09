@@ -25,6 +25,7 @@ CERTIFIED_TIER_ID = "replocx_tmy3_wallfix_4scen"
 CERTIFIED_CELL_COUNT = 720
 FIGURE_REGISTRY_TIER = "f2v3_final"
 SCHEMA_VERSION = "atlas.w1/1.0"
+STRATUM_CONTRACT_VERSION = "atlas.strata/1.0"
 
 CANONICAL_DATA_ROOT = Path(
     "/Users/cch322/Library/CloudStorage/OneDrive-DrexelUniversity/PhD files/"
@@ -51,6 +52,30 @@ STRATUM_DIMENSIONS: dict[str, tuple[str, str]] = {
     "building": ("by_building_type_scenario", "building_type"),
     "vintage": ("by_vintage_group_scenario", "vintage_group"),
 }
+CLIMATE_STRATA = (
+    ("Cold & Very Cold", "cold-very-cold"),
+    ("Hot-Dry & Mixed Dry", "hot-dry-mixed-dry"),
+    ("Hot-Humid", "hot-humid"),
+    ("Marine", "marine"),
+    ("Mixed-Humid", "mixed-humid"),
+)
+URBANICITY_STRATA = ("HDU", "LDU", "Rural", "Suburban")
+CERTIFIED_CELLS_PER_STRATUM_SCENARIO = 9
+STRATUM_AGGREGATE_METRICS = (
+    "op_temp_mean_c",
+    "op_temp_p95_true_c",
+    "op_temp_max_c",
+    "op_temp_hours_gt_26c",
+    "op_temp_hours_gt_28c",
+    "op_temp_hours_gt_30c",
+    "op_temp_hours_gt_32c",
+    "degree_hours_28c",
+    "humidity_ratio_mean_kgkg",
+    "humidity_ratio_p95_true_kgkg",
+    "humidity_hours_gt_0p012kgkg",
+    "joint_hours_gt_28c_0p012kgkg",
+    "joint_hours_gt_30c_0p012kgkg",
+)
 STORY_COMPARISON_ORDER = ("D-B", "D-C", "D-A")
 PENDING_EQUITY_LAYERS = (
     "CDC SVI percentile",
@@ -267,6 +292,7 @@ class AtlasService:
             files[f"{tier}.scenario_c"] = self._find_one(self.data_dir / tier, f"{tier}_scenario_c_summary")
             files[f"{tier}.d_specific"] = self._find_one(self.data_dir / tier, f"{tier}_d_specific_comparisons")
             files[f"{tier}.differential"] = self._find_one(self.data_dir / tier, f"{tier}_differential_summary")
+            files[f"{tier}.run_level_metrics"] = self._find_one(self.data_dir / tier, f"{tier}_run_level_metrics")
             for dimension, (suffix, _) in STRATUM_DIMENSIONS.items():
                 files[f"{tier}.by_{dimension}"] = self._find_one(self.data_dir / tier, f"{tier}_{suffix}")
 
@@ -560,21 +586,137 @@ class AtlasService:
 
     def by_stratum(self, tier: str = "annual", dimension: str = "climate") -> dict[str, Any]:
         tier = self._check_tier(tier)
+        if dimension == "stratum":
+            return self._by_climate_urbanicity_stratum(tier)
         if dimension not in STRATUM_DIMENSIONS:
-            raise ValueError(f"dimension must be one of {sorted(STRATUM_DIMENSIONS)}; got {dimension!r}")
+            allowed = sorted((*STRATUM_DIMENSIONS, "stratum"))
+            raise ValueError(f"dimension must be one of {allowed}; got {dimension!r}")
         _, group_col = STRATUM_DIMENSIONS[dimension]
         rows = [self._annotate_scenario_row(row) for row in self._load(f"{tier}.by_{dimension}")]
         rows = self._sort_grouped_rows(rows, group_col)
         self._assert_group_scenarios(rows, group_col, f"{tier} by-stratum {dimension}")
+        groups = list(dict.fromkeys(str(row[group_col]) for row in rows))
         return {
             **self._common_payload(),
+            "contract_version": STRATUM_CONTRACT_VERSION,
             "tier": tier,
             "dimension": dimension,
             "group_column": group_col,
+            "group_columns": [group_col],
+            "stratum_count": len(groups),
+            "scenario_ordering": ", ".join(self.scenario_order),
             "rows": rows,
             "metric_notes": self.metric_notes,
             "endpoint_definitions": self.endpoint_definitions,
+            "certified_provenance": self._certified_stratum_provenance(),
             **self._source_payload(f"{tier}.by_{dimension}"),
+        }
+
+    def _by_climate_urbanicity_stratum(self, tier: str) -> dict[str, Any]:
+        """Aggregate the certified run-level table to all 20 selection strata."""
+
+        source_key = f"{tier}.run_level_metrics"
+        source_rows = self._load(source_key)
+        buckets: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+        for row in source_rows:
+            key = (
+                str(row.get("climate_region")),
+                str(row.get("urbanicity")),
+                str(row.get("hvac_scenario")),
+            )
+            buckets.setdefault(key, []).append(row)
+
+        rows: list[dict[str, Any]] = []
+        strata: list[dict[str, Any]] = []
+        for climate, climate_slug in CLIMATE_STRATA:
+            for urbanicity in URBANICITY_STRATA:
+                stratum_id = f"{climate_slug}__{urbanicity.lower()}"
+                stratum_label = f"{climate} · {urbanicity}"
+                scenario_counts: dict[str, int] = {}
+                location_labels: set[str] = set()
+                for scenario in self.scenario_order:
+                    subset = buckets.get((climate, urbanicity, scenario), [])
+                    if not subset:
+                        raise AtlasUnavailableError(
+                            f"{tier} certified run-level metrics are missing " f"{climate} / {urbanicity} / {scenario}."
+                        )
+                    if len(subset) != CERTIFIED_CELLS_PER_STRATUM_SCENARIO:
+                        raise AtlasUnavailableError(
+                            f"{tier} certified run-level metrics contain {len(subset)} cells for "
+                            f"{climate} / {urbanicity} / {scenario}; expected "
+                            f"{CERTIFIED_CELLS_PER_STRATUM_SCENARIO}."
+                        )
+                    scenario_counts[scenario] = len(subset)
+                    location_labels.update(str(row["location_label"]) for row in subset if row.get("location_label"))
+                    aggregate: dict[str, Any] = {
+                        "stratum_id": stratum_id,
+                        "stratum_label": stratum_label,
+                        "climate_region": climate,
+                        "urbanicity": urbanicity,
+                        "hvac_scenario": scenario,
+                        "n_cells": len(subset),
+                    }
+                    for metric in STRATUM_AGGREGATE_METRICS:
+                        aggregate[f"{metric}_mean"] = _mean([row.get(metric) for row in subset])
+                    rows.append(self._annotate_scenario_row(aggregate))
+
+                if len(location_labels) != 1:
+                    raise AtlasUnavailableError(
+                        f"{tier} stratum {stratum_label!r} resolves to "
+                        f"{len(location_labels)} location labels; expected exactly one."
+                    )
+                strata.append(
+                    {
+                        "stratum_id": stratum_id,
+                        "stratum_label": stratum_label,
+                        "climate_region": climate,
+                        "urbanicity": urbanicity,
+                        "location_label": next(iter(location_labels)),
+                        "scenario_cell_counts": scenario_counts,
+                    }
+                )
+
+        expected_keys = {
+            (climate, urbanicity, scenario)
+            for climate, _ in CLIMATE_STRATA
+            for urbanicity in URBANICITY_STRATA
+            for scenario in self.scenario_order
+        }
+        unexpected_keys = set(buckets) - expected_keys
+        if unexpected_keys:
+            raise AtlasUnavailableError(
+                f"{tier} certified run-level metrics contain unexpected stratum keys: " f"{sorted(unexpected_keys)!r}."
+            )
+        self._assert_group_scenarios(rows, "stratum_id", f"{tier} 20-stratum response")
+        return {
+            **self._common_payload(),
+            "contract_version": STRATUM_CONTRACT_VERSION,
+            "tier": tier,
+            "dimension": "stratum",
+            "group_column": "stratum_id",
+            "group_columns": ["climate_region", "urbanicity"],
+            "stratum_count": len(strata),
+            "scenario_ordering": ", ".join(self.scenario_order),
+            "strata": strata,
+            "rows": rows,
+            "aggregation": {
+                "location": "server",
+                "source_level": "certified run-level metrics",
+                "method": "arithmetic mean within climate_region × urbanicity × hvac_scenario",
+                "metric_columns": [f"{metric}_mean" for metric in STRATUM_AGGREGATE_METRICS],
+            },
+            "metric_notes": self.metric_notes,
+            "endpoint_definitions": self.endpoint_definitions,
+            "certified_provenance": self._certified_stratum_provenance(),
+            **self._source_payload(source_key),
+        }
+
+    def _certified_stratum_provenance(self) -> dict[str, Any]:
+        return {
+            "tier_id": CERTIFIED_TIER_ID,
+            "r9_status": self.audit.get("status"),
+            "figure_registry_tier": FIGURE_REGISTRY_TIER,
+            "read_only": True,
         }
 
     def scenario_c(self, tier: str = "annual") -> dict[str, Any]:

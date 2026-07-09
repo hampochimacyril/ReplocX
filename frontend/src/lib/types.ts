@@ -226,7 +226,7 @@ export interface CandidatesPage {
 
 export type AtlasTier = "annual" | "seasonal";
 export type Scenario = "A" | "C" | "B" | "D";
-export type StratumDimension = "climate" | "urbanicity" | "building" | "vintage";
+export type StratumDimension = "climate" | "urbanicity" | "stratum" | "building" | "vintage";
 
 export type MetricRow = Record<string, number | string | boolean | null>;
 
@@ -265,16 +265,42 @@ export interface ScenarioDictionaryResponse {
 
 export interface ByStratumResponse {
   schema_version?: string;
+  contract_version?: "atlas.strata/1.0";
   tier_id?: string;
   tier: AtlasTier;
   dimension: StratumDimension;
   group_column: string;
+  group_columns?: string[];
+  stratum_count?: number;
+  scenario_ordering?: string;
   scenario_order?: Scenario[];
+  strata?: AtlasStratum[];
   rows: MetricRow[];
+  aggregation?: {
+    location: "server";
+    source_level: string;
+    method: string;
+    metric_columns: string[];
+  };
+  certified_provenance?: {
+    tier_id: string;
+    r9_status: "PASS" | string;
+    figure_registry_tier: "f2v3_final";
+    read_only: boolean;
+  };
   metric_notes?: Record<string, string>;
   endpoint_definitions?: AtlasEndpointDefinitions;
   source_csv?: string;
   provenance_sidecar?: string;
+}
+
+export interface AtlasStratum {
+  stratum_id: string;
+  stratum_label: string;
+  climate_region: string;
+  urbanicity: string;
+  location_label: string;
+  scenario_cell_counts: Record<Scenario, number>;
 }
 
 export interface ScenarioCSummary {

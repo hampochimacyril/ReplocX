@@ -15,6 +15,10 @@ export function AtlasSiteDetail() {
 
   const decoded = decodeURIComponent(siteId);
   const row = dashboard.data?.scenario.selected.find((item) => rowKey(item) === decoded);
+  const sharedStratumLabel =
+    params.get("climate") && params.get("urbanicity")
+      ? `${params.get("climate")} · ${params.get("urbanicity")}`
+      : null;
 
   useEffect(() => {
     if (row) selectCatchment(row);
@@ -43,6 +47,13 @@ export function AtlasSiteDetail() {
         <p className="muted">
           {row.climate_region} · {row.urbanicity} · {row.catchment_type} {row.catchment_code}
         </p>
+        <p className="atlas-reviewer-path" aria-label="Reviewer drill path">
+          Climate <span>→</span> Urbanicity <span>→</span>{" "}
+          <strong title={params.get("stratum") ?? undefined}>
+            {sharedStratumLabel ?? `${row.climate_region} · ${row.urbanicity_short}`}
+          </strong>{" "}
+          <span>→</span> Site
+        </p>
         <dl className="kv" style={{ gridTemplateColumns: "220px 1fr" }}>
           <dt>Scenario</dt>
           <dd>{params.get("scenario") ?? "D"}</dd>
@@ -58,7 +69,12 @@ export function AtlasSiteDetail() {
         <p className="chart-note">
           The details drawer is open with geography, weather, ResStock, score, data-quality, and provenance sections.
         </p>
-        <Link className="btn" to="/atlas">Back to Atlas overview</Link>
+        <Link
+          className="btn"
+          to={{ pathname: "/atlas", search: params.toString() ? `?${params.toString()}` : "" }}
+        >
+          Back to 20-stratum pivot
+        </Link>
       </section>
     </div>
   );

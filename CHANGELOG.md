@@ -8,6 +8,17 @@ these releases.
 
 ## [Unreleased]
 
+### Atlas N3 full 20-stratum pivot
+
+- Added the versioned `atlas.strata/1.0` server response for the complete
+  five-climate × four-urbanicity lattice, derived server-side from certified
+  run-level outputs with A/C/B/D ordering and R9/f2v3 provenance.
+- Added guided climate, urbanicity, 20-stratum, and representative-site review
+  steps with URL/share state, labels, tooltips, filters, and screenshot
+  evidence.
+- Extended backend, frontend, disabled-mode, and Playwright coverage for all 20
+  strata without changing sealed-passive D comparison semantics.
+
 ### ReplocX Research Atlas — private local release candidate
 - Added a modular sibling context set, the **Research Atlas**, served by the same
   React app and `/api/v1` backend and reading the certified

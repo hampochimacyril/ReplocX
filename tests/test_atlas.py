@@ -22,6 +22,8 @@ PRIMARY_FAMILIES = [
     "humidity_ratio_mean_kgkg",
     "humidity_ratio_p95_true_kgkg",
 ]
+CLIMATES = [label for label, _ in atlas_service.CLIMATE_STRATA]
+URBANICITIES = list(atlas_service.URBANICITY_STRATA)
 
 
 def _write(path: Path, text: str) -> None:
@@ -130,6 +132,36 @@ def write_atlas_fixture(root: Path, include_d: bool = True, include_equity: bool
             if include_d:
                 rows.append(f"{group_value},D,1,24,33,0.009,0.016,40,50,80")
             _write(root / tier / f"fixture_{tier}_{stem}_2026-07-07.csv", "\n".join(rows + [""]))
+
+        run_rows = [
+            (
+                "climate_region,urbanicity,hvac_scenario,location_label,"
+                "op_temp_mean_c,op_temp_p95_true_c,op_temp_max_c,"
+                "op_temp_hours_gt_26c,op_temp_hours_gt_28c,op_temp_hours_gt_30c,"
+                "op_temp_hours_gt_32c,degree_hours_28c,humidity_ratio_mean_kgkg,"
+                "humidity_ratio_p95_true_kgkg,humidity_hours_gt_0p012kgkg,"
+                "joint_hours_gt_28c_0p012kgkg,joint_hours_gt_30c_0p012kgkg"
+            )
+        ]
+        scenario_values = {
+            "A": (21, 24, 25, 1, 0, 0, 0, 0, 0.006, 0.010, 2, 0, 0),
+            "C": (22, 27, 29, 12, 10, 3, 1, 20, 0.007, 0.012, 20, 2, 1),
+            "B": (23, 29, 31, 24, 20, 8, 3, 40, 0.008, 0.014, 30, 8, 3),
+            "D": (24, 33, 35, 48, 40, 20, 8, 80, 0.009, 0.016, 50, 20, 8),
+        }
+        for climate in CLIMATES:
+            for urbanicity in URBANICITIES:
+                location = f"{climate.replace(' ', '_')}_{urbanicity}"
+                for scenario in EXPECTED_ORDER[: 4 if include_d else 3]:
+                    values = ",".join(str(value) for value in scenario_values[scenario])
+                    run_rows.extend(
+                        f"{climate},{urbanicity},{scenario},{location},{values}"
+                        for _ in range(atlas_service.CERTIFIED_CELLS_PER_STRATUM_SCENARIO)
+                    )
+        _write(
+            root / tier / f"fixture_{tier}_run_level_metrics_2026-07-07.csv",
+            "\n".join(run_rows + [""]),
+        )
 
         _write(
             root / tier / f"fixture_{tier}_scenario_c_summary_2026-07-07.csv",
@@ -373,19 +405,47 @@ class AtlasW1FixtureTests(EnvFixtureMixin, unittest.TestCase):
 
     def test_by_stratum_returns_acbd_for_every_dimension_and_tier(self) -> None:
         for tier in ("annual", "seasonal"):
-            for dimension in ("climate", "urbanicity", "building", "vintage"):
+            for dimension in ("climate", "urbanicity", "stratum", "building", "vintage"):
                 payload = handle_atlas("/api/results/by-stratum", {"tier": tier, "dimension": dimension})
                 group_col = payload["group_column"]
                 groups: dict[str, list[str]] = {}
                 for row in payload["rows"]:
                     groups.setdefault(str(row[group_col]), []).append(str(row["hvac_scenario"]))
-                self.assertEqual([EXPECTED_ORDER], list(groups.values()))
+                self.assertTrue(all(order == EXPECTED_ORDER for order in groups.values()))
                 first = payload["rows"][0]
                 self.assertIn("op_temp_p95_true_c_mean", first)
                 self.assertIn("humidity_ratio_mean_kgkg_mean", first)
                 self.assertIn("humidity_ratio_p95_true_kgkg_mean", first)
                 self.assertIn("op_temp_hours_gt_28c_mean", first)
                 self.assertIn("degree_hours_28c_mean", first)
+
+    def test_full_stratum_contract_covers_all_20_combinations(self) -> None:
+        for tier in ("annual", "seasonal"):
+            payload = handle_atlas("/api/results/by-stratum", {"tier": tier, "dimension": "stratum"})
+            self.assertEqual("atlas.strata/1.0", payload["contract_version"])
+            self.assertEqual(20, payload["stratum_count"])
+            self.assertEqual(["climate_region", "urbanicity"], payload["group_columns"])
+            self.assertEqual(EXPECTED_ORDER, payload["scenario_order"])
+            self.assertEqual(80, len(payload["rows"]))
+            self.assertEqual(
+                {(climate, urbanicity) for climate in CLIMATES for urbanicity in URBANICITIES},
+                {(row["climate_region"], row["urbanicity"]) for row in payload["strata"]},
+            )
+            self.assertTrue(
+                all(row["n_cells"] == atlas_service.CERTIFIED_CELLS_PER_STRATUM_SCENARIO for row in payload["rows"])
+            )
+            self.assertEqual("server", payload["aggregation"]["location"])
+            self.assertIn("run_level_metrics", payload["source_csv"])
+            self.assertTrue(payload["provenance_sidecar"].endswith(".prov.json"))
+            self.assertEqual(
+                {
+                    "tier_id": atlas_service.CERTIFIED_TIER_ID,
+                    "r9_status": "PASS",
+                    "figure_registry_tier": "f2v3_final",
+                    "read_only": True,
+                },
+                payload["certified_provenance"],
+            )
 
     def test_d_comparisons_include_story_comparisons(self) -> None:
         payload = handle_atlas("/api/results/d-comparisons", {"tier": "annual"})

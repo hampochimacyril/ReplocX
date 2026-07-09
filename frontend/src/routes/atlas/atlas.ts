@@ -28,9 +28,27 @@ export const SCENARIOS: Scenario[] = ["A", "C", "B", "D"];
 export const STRATUM_DIMENSIONS: Array<{ key: StratumDimension; label: string }> = [
   { key: "climate", label: "Climate region" },
   { key: "urbanicity", label: "Urbanicity" },
+  { key: "stratum", label: "Climate × urbanicity (20 strata)" },
   { key: "building", label: "Building type" },
   { key: "vintage", label: "Vintage group" },
 ];
+
+export const GUIDED_STRATUM_DIMENSIONS = STRATUM_DIMENSIONS.filter(
+  (item) => item.key === "climate" || item.key === "urbanicity" || item.key === "stratum",
+);
+
+const CLIMATE_SLUGS: Record<string, string> = {
+  "Cold & Very Cold": "cold-very-cold",
+  "Hot-Dry & Mixed Dry": "hot-dry-mixed-dry",
+  "Hot-Humid": "hot-humid",
+  Marine: "marine",
+  "Mixed-Humid": "mixed-humid",
+};
+
+export function atlasStratumId(climate: string, urbanicity: string): string {
+  const climateSlug = CLIMATE_SLUGS[climate] ?? climate.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `${climateSlug}__${urbanicity.toLowerCase()}`;
+}
 
 /** Controls shared by the shell's top bar and every context. */
 export interface AtlasControls {
