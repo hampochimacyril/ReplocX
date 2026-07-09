@@ -1,5 +1,42 @@
 # Session Handoff
 
+## Session N6 Render pivot — ready for owner Dashboard deploy
+
+- Date: July 9, 2026.
+- Owner selected Render as the execution target and confirmed the deployment can
+  be launched from the GitHub repository.
+- Correct repo/branch:
+  `https://github.com/hampochimacyril/ReplocX`,
+  `codex/atlas-release-candidate`.
+- Updated root `render.yaml` on the release branch from the old public-demo
+  profile to the private Atlas Render Blueprint:
+  - Docker web service;
+  - paid `starter` plan;
+  - branch `codex/atlas-release-candidate`;
+  - manual deploys (`autoDeployTrigger: off`);
+  - persistent disk `replocx-private-data` at `/var/data`;
+  - Atlas enabled;
+  - required app token gate via `RLE_PRIVATE_AUTH_TOKEN`;
+  - private data roots under `/var/data`.
+- Added `scripts/package_render_private_data.sh` to create the out-of-band
+  `/var/data` bundle without committing certified data to Git.
+- Added `docs/RENDER_PRIVATE_DEPLOYMENT.md` with the Render Dashboard,
+  private-data upload, redeploy, and smoke-test sequence.
+
+### Render-specific caveat
+
+The Render-first path does not reproduce the VM/Caddy Basic-auth edge layer by
+itself. It protects private APIs with the app token and keeps the certified data
+off Git/image layers. Add Render inbound IP rules and/or an external Basic-auth
+proxy before sign-off if the original two-layer C1 boundary is still mandatory.
+
+### Next action
+
+Owner opens the Render Blueprint link, selects the release branch, sets
+`RLE_PRIVATE_AUTH_TOKEN`, applies the Blueprint, uploads the private data bundle
+to `/var/data`, redeploys/restarts, and runs the live smoke in
+`docs/RENDER_PRIVATE_DEPLOYMENT.md`.
+
 ## Session N6 — B1 owner-assisted private deployment preflight
 
 - Date: July 9, 2026.

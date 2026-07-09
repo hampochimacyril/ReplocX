@@ -1,8 +1,9 @@
 # Render blueprint EXAMPLE for a private, authenticated deployment.
 #
-# Keep render.yaml as the PUBLIC demo profile. This file is an example template:
-# real-data mounts and secrets must be supplied by the approved private host.
-# Never commit actual tokens, Basic-auth credentials, or private data.
+# Historical private Render template. On branch `codex/atlas-release-candidate`,
+# the root render.yaml is now the owner-selected Render deployment profile. Keep
+# this file as a reference only; never commit actual tokens, Basic-auth
+# credentials, or private data.
 #
 # W4 ATLAS WARNING: Render must sit behind an organization-controlled nginx or
 # Caddy reverse proxy that enforces HTTP Basic auth. This blueprint alone does
@@ -37,9 +38,9 @@ services:
     dockerContext: .
     plan: starter            # paid: required for the persistent disk + no spin-down
     region: oregon
-    branch: feature/research-atlas
+    branch: codex/atlas-release-candidate
     healthCheckPath: /api/v1/health
-    autoDeploy: false        # promote production deploys deliberately, after sign-off
+    autoDeployTrigger: off   # promote production deploys deliberately, after sign-off
     disk:
       name: replocx-private-data
       mountPath: /var/data   # SQLite scenario store lives here; snapshotted daily

@@ -1,6 +1,6 @@
 # Representative Location Explorer
 
-[![CI](https://github.com/hampochimacyril/Location-representation-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/hampochimacyril/Location-representation-explorer/actions/workflows/ci.yml)
+[![CI](https://github.com/hampochimacyril/ReplocX/actions/workflows/ci.yml/badge.svg)](https://github.com/hampochimacyril/ReplocX/actions/workflows/ci.yml)
 
 **Live demo (synthetic data):** https://representative-location-explorer.onrender.com
 
@@ -170,27 +170,24 @@ The regression suite checks:
 - leading-zero identifier preservation
 - transparent ZIP-resolution errors
 
-## Deploy a public demo (Render)
+## Deploy the private Atlas candidate (Render)
 
-The bundled [`render.yaml`](render.yaml) blueprint deploys a **public, demo-data**
-instance — safe to share because it never serves the private analytical outputs.
+On branch `codex/atlas-release-candidate`, the bundled [`render.yaml`](render.yaml)
+is a **private Atlas** Render Blueprint. It builds the Docker image from GitHub,
+creates a paid web service, and attaches a `/var/data` persistent disk. Certified
+analysis, Atlas data, and f2v3 figures are still delivered out of band; they are
+not committed to Git or baked into the image.
 
-1. Push the repository to GitHub.
-2. In Render: **New → Blueprint**, connect this repo, and accept the detected
-   `render.yaml`. Render builds, runs `scripts/generate_demo_data.py`, and starts
-   `uvicorn backend.fastapi_app:app` on its `$PORT`.
-3. After ~3–5 minutes you get a public URL like
-   `https://representative-location-explorer.onrender.com`. Confirm readiness at
-   `/api/health` (`"data_mode": "demo"`).
+1. In Render: **New -> Blueprint** and connect
+   `https://github.com/hampochimacyril/ReplocX`.
+2. Select branch `codex/atlas-release-candidate` and apply the detected
+   `render.yaml`.
+3. Set the secret `RLE_PRIVATE_AUTH_TOKEN` in the Dashboard.
+4. Upload the private data bundle to `/var/data`, redeploy/restart, then run the
+   smoke checks in [docs/RENDER_PRIVATE_DEPLOYMENT.md](docs/RENDER_PRIVATE_DEPLOYMENT.md).
 
-A `Procfile` is included for Heroku/Railway-style platforms, and the `Dockerfile`
-honors `$PORT` for any container host. To serve **real** data instead, deploy to a
-private/authenticated host and set `RLE_ANALYSIS_DATA_DIR` to a read-only mount.
-
-**Free-tier cold starts:** Render's free web services sleep after ~15 minutes idle,
-so the first request then takes ~30–60s to wake. To keep the demo warm at no cost,
-point a free uptime monitor (e.g. UptimeRobot or cron-job.org) at `…/api/health`
-every 10 minutes.
+The public demo remains separate at <https://replocx.onrender.com> and serves
+only bundled synthetic data.
 
 ## Docker
 
@@ -209,16 +206,16 @@ deployment.
 ## Private GitHub Publication
 
 Confirmed private repository:
-[hampochimacyril/Location-representation-explorer](https://github.com/hampochimacyril/Location-representation-explorer)
+[hampochimacyril/ReplocX](https://github.com/hampochimacyril/ReplocX)
 
 Active branch:
 
 ```bash
-feature/location-representation-explorer
+codex/atlas-release-candidate
 ```
 
-Draft pull request:
-[#1 Add Representative Location Explorer](https://github.com/hampochimacyril/Location-representation-explorer/pull/1)
+Render deploy branch:
+[`codex/atlas-release-candidate`](https://github.com/hampochimacyril/ReplocX/tree/codex/atlas-release-candidate)
 
 Review [docs/privacy_and_repository_rules.md](docs/privacy_and_repository_rules.md) before
 adding collaborators, screenshots, deployment targets, or any additional data artifacts.

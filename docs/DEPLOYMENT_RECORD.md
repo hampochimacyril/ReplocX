@@ -7,7 +7,7 @@ private production instance (prepared, pending owner-executed deploy + sign-off)
 
 | Field | Value |
 | --- | --- |
-| Service | `replocx` (Render, Docker runtime, `render.yaml`) |
+| Service | `replocx` (Render, Docker runtime, public-demo `render.yaml` on the demo branch) |
 | URL | <https://replocx.onrender.com> |
 | Data mode | `demo` (bundled synthetic `data/demo/`, 2,959 candidates) |
 | Auth | none (open; serves no private data) |
@@ -20,26 +20,29 @@ about the **private** instance only.
 ## 2. Private production — selected infrastructure decisions
 
 The owner selected `B1 + C1` on July 8, 2026: an approved
-VM/Docker Compose/Caddy host with HTTP Basic auth plus the app token. The older
-Session 11 Render blueprint remains a historical alternative, not the selected
-Atlas release path. `TO CONFIRM` items are completed before live deployment.
+VM/Docker Compose/Caddy host with HTTP Basic auth plus the app token. On July 9,
+2026, the owner changed the immediate execution path to a GitHub-backed Render
+deployment for speed. This Render path keeps private data out of Git and uses
+the app token as the required reviewer gate; add Render inbound IP rules or an
+external Basic-auth proxy if the original two-layer C1 boundary is required
+before sign-off. `TO CONFIRM` items are completed before live deployment.
 
 | Decision | Value |
 | --- | --- |
-| Host / platform | Approved organization-controlled VM running `docker-compose.atlas-private.example.yml` with Caddy as the only edge; exact host **TO CONFIRM** |
-| Instance plan | Small always-on VM sized for the app, Caddy, and reviewer traffic — **TO CONFIRM** provider and size |
-| Region | **TO CONFIRM** based on organization policy and reviewer location |
+| Host / platform | Render web service from `hampochimacyril/ReplocX`, branch `codex/atlas-release-candidate`; exact service URL **TO CONFIRM** |
+| Instance plan | Render paid `starter` Docker web service with persistent disk |
+| Region | Render `oregon` unless owner changes it in the Dashboard |
 | Access-control owner | **TO CONFIRM** (named individual responsible for the token + IP allowlist) |
-| Authentication | Reverse-proxy HTTP Basic auth plus app token (`RLE_PRIVATE_AUTH_TOKEN`), translated to Bearer upstream |
-| Network restriction | `atlas-app` is internal-only; Caddy publishes 443; org egress / VPN ranges — **TO CONFIRM** |
-| Persistent storage | Compose `atlas-state` volume with SQLite at `/state/scenarios.sqlite3`; host snapshot/backup policy **TO CONFIRM** |
-| National/Atlas data delivery | Out-of-band read-only mounts; the public-safe image does not bake `pipeline/out`, `data/atlas`, or f2v3 assets |
+| Authentication | Required app token (`RLE_PRIVATE_AUTH_TOKEN`) entered by reviewers; optional Render inbound IP restriction or external Basic-auth proxy for two-layer access |
+| Network restriction | Render public HTTPS endpoint plus app token; allowed IP/VPN ranges **TO CONFIRM** if using Render inbound IP rules |
+| Persistent storage | Render disk `replocx-private-data` mounted at `/var/data`; SQLite at `/var/data/replocx/scenarios.sqlite3` |
+| National/Atlas data delivery | Out-of-band upload to the Render disk; the public-safe image does not bake `pipeline/out`, `data/atlas`, or f2v3 assets |
 | Data-retention rules | Certified inputs are immutable/reproducible. Scenario database retention and purge policy — **TO CONFIRM** |
 | Backup owner | **TO CONFIRM** (owns VM snapshots and SQLite backup/restore drills) |
 | Budget | Command/download approval granted July 9, 2026; VM, storage/snapshots, DNS, and monitoring spend owner **TO CONFIRM** |
 | Secret manager | **TO CONFIRM** source of truth for Basic credentials and `RLE_PRIVATE_AUTH_TOKEN`; never commit secrets or plaintext hashes |
 | Error tracking | Optional Sentry via `RLE_SENTRY_DSN` — **TO CONFIRM** whether enabled |
-| TLS | Caddy-managed TLS for the approved private DNS name |
+| TLS | Render-managed TLS for the `.onrender.com` service domain; custom private DNS **TO CONFIRM** |
 | Exact private repository | Owner-confirmed repository `https://github.com/hampochimacyril/ReplocX.git`, branch `codex/atlas-release-candidate` |
 
 ### Research Atlas W4 addendum (July 8, 2026)
@@ -52,6 +55,9 @@ Atlas release path. `TO CONFIRM` items are completed before live deployment.
   `deploy/atlas-private/Caddyfile`; real mounts are `:ro`.
 - The public Docker runtime now uses an allowlist and explicitly keeps
   `RLE_ENABLE_ATLAS=0`.
+- The private Render release branch now uses `render.yaml` as a paid Docker web
+  service Blueprint with a `/var/data` persistent disk and private Atlas env
+  paths. Deployment instructions: `docs/RENDER_PRIVATE_DEPLOYMENT.md`.
 - N5 exercised the committed boundary as real containers on July 9, 2026:
   actual image/layer leak scan PASS; Caddy 401 / app-token 401 / authorized
   200 matrix PASS; app host port absent; all analytical bind mounts read-only;
@@ -60,10 +66,9 @@ Atlas release path. `TO CONFIRM` items are completed before live deployment.
 - Live deploy remains blocked on the `TO CONFIRM` owner/infrastructure fields.
   N5 is local container verification, not a live deployment or owner sign-off.
 
-### Historical Render alternative confirmed June 8, 2026
+### Render facts confirmed June 8-July 9, 2026
 
-These facts explain the older `render.private.example.yaml` option. They do not
-override the selected B1 VM/Compose/Caddy release path.
+These facts apply to the selected Render execution path.
 
 - Persistent disks require a **paid** instance; the default filesystem is
   ephemeral, so a free instance would lose all saved scenarios on every
@@ -109,30 +114,29 @@ toolchain. Sandbox Python is 3.10, so `datetime.UTC` (3.11+) was provided via a
 | Exports (auth required) | `site-list.csv` (20), `openstudio-manifest.json` (`rle.openstudio_manifest/1.0`, 20 sites), `resstock-sampling.csv` (20) — all 200 with token, **401** without |
 | Structured logs | one-line JSON `http_request` events with status + duration |
 
-## 4. Ready-to-execute deploy plan
+## 4. Ready-to-execute Render deploy plan
 
-Prerequisites: approved VM, private DNS name, firewall/VPN policy, secret-manager
-credentials, Docker Engine, and the certified read-only host paths from §2.
+Prerequisites: owner access to Render, GitHub repo access, a secret value for
+`RLE_PRIVATE_AUTH_TOKEN`, and the certified analysis/Atlas/f2v3 roots available
+locally for out-of-band upload.
 
-1. **Prepare the VM.** Patch the OS, install Docker Engine with Compose support,
-   configure the private DNS record, and make the certified analysis/Atlas/
-   f2v3 host paths available read-only to the deployment account.
-2. **Inject secrets.** Supply `RLE_BASIC_AUTH_USER`,
-   `RLE_BASIC_AUTH_HASH`, `RLE_PRIVATE_AUTH_TOKEN`, `RLE_PRIVATE_HOST`, and
-   optionally `RLE_SENTRY_DSN` from the approved secret manager. Do not use a
-   committed production `.env` file.
-3. **Restrict the network.** Keep the app port private; expose only the
-   Basic-auth proxy, add confirmed org/VPN ranges, and confirm TLS is active.
-4. **Deploy the stack.** Validate the resolved Compose configuration, build the
-   public-safe app image, start Caddy and the app, and inspect the real image
-   layers before accepting the deployment.
-5. **Verify** with the post-deploy smoke checklist
-   (`docs/OPERATIONS_RUNBOOK.md` §6): production data mode, 401-without /
-   200-with auth, 4019 candidates, exports, scenario persistence over HTTPS, and
-   confirm no private rows or token appear in logs.
-6. **Take the first scenario backup** and confirm the VM/volume snapshot policy
-   plus a restore drill owner.
-7. **Record results** in §5 below and tag the production release (§6).
+1. **Create the Render Blueprint** from
+   `https://github.com/hampochimacyril/ReplocX`, branch
+   `codex/atlas-release-candidate`. Render reads `render.yaml`.
+2. **Set the secret** `RLE_PRIVATE_AUTH_TOKEN` in the Render Dashboard.
+3. **Apply the Blueprint.** The first deploy may show degraded data until
+   `/var/data` is populated.
+4. **Package and upload private data** using
+   `scripts/package_render_private_data.sh`; expand it on the Render disk so
+   `/var/data/analysis`, `/var/data/atlas/replocx_tmy3_wallfix_4scen`, and
+   `/var/data/atlas-figures/f2v3_final` exist.
+5. **Redeploy/restart the service**, then verify production data mode, protected
+   API 401 without token, authorized 200 with `X-RLE-Auth`, 720 cells,
+   A/C/B/D, R9 PASS, `f2v3_final`, equity READY, and clean logs.
+6. **Optionally add access restrictions**: Render inbound IP rules, custom
+   domain, or an external Basic-auth proxy if policy requires C1 two-layer auth.
+7. **Record results** in §5 below and tag the production release (§6) only after
+   owner sign-off.
 
 ## 5. Deploy log
 
@@ -141,6 +145,7 @@ credentials, Docker Engine, and the certified read-only host paths from §2.
 | 2026-06-08 | Session 11 | Prepared private blueprint, runbook, and local verification | Local production verification PASS; live deploy pending owner |
 | 2026-07-08 | Session 17 / W4 | Prepared Atlas Basic+app-token boundary, read-only mounts, public-image allowlist, and clarified selection-demo vs certified-Atlas UI state | Local W4 verification PASS; live deploy and owner sign-off pending |
 | 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; branch `codex/atlas-release-candidate` published to `hampochimacyril/ReplocX`; certified smoke PASS; no host/DNS/secret-manager/network target found | Correct release branch published; live deploy remains blocked on concrete infrastructure values |
+| 2026-07-09 | Session N6 Render pivot | Owner selected Render from GitHub; root `render.yaml`, data-packaging helper, and Render deploy guide prepared for the release branch | Ready for owner Dashboard deploy; live URL, data upload, smoke, and sign-off pending |
 | _TBD_ | _owner_ | Executed private deploy + post-deploy smoke | _record URL, smoke results_ |
 
 ## 6. Owner sign-off and production release tag
