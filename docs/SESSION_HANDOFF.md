@@ -19,14 +19,14 @@
 - Confirmed the clean release worktree is ahead of `origin/main` by nine
   commits with no uncommitted changes before the N6 documentation update.
 - Confirmed Docker is available at `/usr/local/bin/docker`.
-- Confirmed the configured Git remote is
-  `https://github.com/hampochimacyril/Location-representation-explorer.git`.
-  `git ls-remote origin HEAD` resolved to `c0fb5cb`; the unauthenticated public
-  GitHub API returned `404`, so the repository is not publicly discoverable
-  through that endpoint.
-- Published the release branch to `origin/codex/atlas-release-candidate`.
+- Initial preflight found `origin` pointing at the old
+  `https://github.com/hampochimacyril/Location-representation-explorer.git`
+  remote. The owner corrected the canonical release repository to
+  `https://github.com/hampochimacyril/ReplocX.git`; added it locally as the
+  `replocx` remote.
+- Published the release branch to `replocx/codex/atlas-release-candidate`.
   GitHub returned the pull-request URL:
-  `https://github.com/hampochimacyril/Location-representation-explorer/pull/new/codex/atlas-release-candidate`.
+  `https://github.com/hampochimacyril/ReplocX/pull/new/codex/atlas-release-candidate`.
 - Environment-name scan found only `GH_PAGER` and `SSH_AUTH_SOCK` among
   deployment/cloud-related names. No `RLE_*`, cloud-provider, deploy-host, DNS,
   or secret-manager variables were present.
