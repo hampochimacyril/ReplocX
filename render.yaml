@@ -1,34 +1,48 @@
-# Render blueprint — one-click public deploy of ReplocX.
+# Render Blueprint - private ReplocX Research Atlas candidate.
 #
-# Uses the Docker runtime so the multi-stage Dockerfile builds the React/Vite
-# frontend (Node stage) and serves it from the Python image. No buildCommand is
-# needed: the Dockerfile owns both the frontend build and the demo-data step.
+# Deploy this branch from GitHub:
+#   https://github.com/hampochimacyril/ReplocX
+#   branch: codex/atlas-release-candidate
 #
-# This deploys the app in DEMO MODE: no RLE_ANALYSIS_DATA_DIR is set and the real
-# analytical outputs are not present in the repo, so the service automatically
-# serves the bundled synthetic dataset (data/demo/). No private research data is
-# ever published by this deployment.
+# This Blueprint intentionally does NOT bake certified analysis, Atlas data, or
+# f2v3 figures into the image. It creates a paid Docker web service with a
+# persistent disk at /var/data. Populate that disk out of band, then redeploy or
+# restart the service before owner sign-off.
 #
-# To deploy:
-#   1. Push this repository to GitHub (already your origin).
-#   2. In the Render dashboard: New -> Blueprint -> connect the repo.
-#   3. Render reads this file and builds the Dockerfile. First deploy ~5-8 min.
-#
-# To later serve REAL data on a private host instead, set RLE_ANALYSIS_DATA_DIR
-# to a mounted, read-only path containing the processed CSVs and keep the service
-# private/authenticated.
+# Render note: this profile uses the app token as the mandatory reviewer gate.
+# It does not reproduce the VM/Caddy Basic-auth edge layer by itself. Add Render
+# inbound IP restrictions and/or an external Basic-auth proxy if policy requires
+# the original two-layer C1 boundary.
 
 services:
   - type: web
-    name: replocx
+    name: replocx-private-atlas
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: free
+    plan: starter
     region: oregon
-    branch: feature/location-representation-explorer
+    branch: codex/atlas-release-candidate
     healthCheckPath: /api/v1/health
-    autoDeploy: true
+    autoDeployTrigger: off
+    disk:
+      name: replocx-private-data
+      mountPath: /var/data
+      sizeGB: 5
     envVars:
       - key: RLE_ENABLE_ATLAS
-        value: "0"
+        value: "1"
+      - key: RLE_REQUIRE_AUTH
+        value: "1"
+      - key: RLE_PRIVATE_AUTH_TOKEN
+        sync: false
+      - key: RLE_ANALYSIS_DATA_DIR
+        value: /var/data/analysis
+      - key: RLE_ATLAS_DATA_DIR
+        value: /var/data/atlas/replocx_tmy3_wallfix_4scen
+      - key: RLE_ATLAS_FIGURE_DIR
+        value: /var/data/atlas-figures/f2v3_final
+      - key: RLE_SCENARIO_DB
+        value: /var/data/replocx/scenarios.sqlite3
+      - key: RLE_LOG_LEVEL
+        value: INFO

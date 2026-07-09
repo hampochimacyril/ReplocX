@@ -6,8 +6,9 @@ Local review is the safest default:
 python3 -m backend.server
 ```
 
-The public profile is `docker-compose.yml` / `render.yaml`. It is synthetic,
-sets `RLE_ENABLE_ATLAS=0`, and has no real-data mount.
+The public profile is `docker-compose.yml` and the public-demo branch's
+`render.yaml`. It is synthetic, sets `RLE_ENABLE_ATLAS=0`, and has no real-data
+mount.
 
 ## Research Atlas private profile
 
@@ -85,6 +86,31 @@ internal readiness, but the edge proxy still protects them with Basic auth.
 service is not W4-ready unless an external nginx/Caddy Basic-auth proxy fronts
 it and the platform enforces read-only Atlas mounts.
 
+## Render private Atlas profile
+
+For the owner-selected Render execution path, the release branch's root
+`render.yaml` creates a paid Docker web service from
+`hampochimacyril/ReplocX`, branch `codex/atlas-release-candidate`, with a
+persistent disk mounted at `/var/data`.
+
+This profile keeps private data out of Git and the image. Populate the disk
+out of band:
+
+```text
+/var/data/analysis
+/var/data/atlas/replocx_tmy3_wallfix_4scen
+/var/data/atlas-figures/f2v3_final
+/var/data/replocx/scenarios.sqlite3
+```
+
+The Render-first profile uses `RLE_PRIVATE_AUTH_TOKEN` as the required reviewer
+gate. It does not reproduce the Caddy Basic-auth edge layer by itself. If the
+reviewer policy requires two-layer C1 access, add Render inbound IP restrictions
+and/or an external Basic-auth proxy before sign-off.
+
+Use `docs/RENDER_PRIVATE_DEPLOYMENT.md` for the dashboard, data upload, and
+smoke-test steps.
+
 ## Equity deployment state (2026-07-08)
 
 `equity_profile.csv` and `equity_profile.csv.prov.json` now verify at the
@@ -114,9 +140,10 @@ canonical sidecars, tests, docs, or f2v3 assets.
 No live real-data deploy is authorized until every item is checked and recorded
 in `docs/DEPLOYMENT_RECORD.md`:
 
-- [ ] approved private host and private DNS name
+- [x] exact private GitHub repository URL confirmed
+- [ ] approved Render service URL and optional private DNS name
 - [ ] named access-control owner
-- [x] reverse-proxy Basic-auth configuration prepared
+- [x] reverse-proxy Basic-auth configuration prepared for VM/Caddy path
 - [x] independent app-token gate configured (`RLE_REQUIRE_AUTH=1`)
 - [x] secret values excluded from repository and delegated to a secret manager
 - [x] certified Atlas data and figure mounts configured read-only in the
@@ -124,7 +151,6 @@ in `docs/DEPLOYMENT_RECORD.md`:
 - [x] equity state verified `READY` from the sidecar-backed canonical profile
 - [ ] data-retention and backup rules approved
 - [ ] crosswalk refresh cadence and weather-QC owner confirmed
-- [ ] exact private GitHub repository URL confirmed
 - [ ] branch divergence reconciled or approved for publication
 - [ ] full verification, live proxy smoke, and owner sign-off attached
 
