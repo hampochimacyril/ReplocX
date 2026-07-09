@@ -3,6 +3,10 @@ import type { MetricRow, Scenario } from "../../lib/types";
 import { SCENARIO_COLOR, SCENARIOS } from "./atlas";
 
 export type ThresholdKey = "28c" | "30c" | "32c";
+export type DComparisonMetricKey =
+  | "op_temp_p95_true_c_reduction"
+  | "op_temp_hours_gt_28c_reduction"
+  | "joint_hours_reduction";
 export type AtlasMetricKey =
   | "op_temp_p95_true_c_mean"
   | "op_temp_hours_gt_28c_mean"
@@ -27,6 +31,36 @@ export const THRESHOLDS: Array<{ key: ThresholdKey; label: string; note: string 
   { key: "28c", label: ">28 C", note: "Threshold: operative temperature above 28 C." },
   { key: "30c", label: ">30 C", note: "Threshold: operative temperature above 30 C." },
   { key: "32c", label: ">32 C", note: "Threshold: operative temperature above 32 C." },
+];
+
+export const D_COMPARISON_METRICS: Array<{
+  key: DComparisonMetricKey;
+  label: string;
+  shortLabel: string;
+  unit: string;
+  note: string;
+}> = [
+  {
+    key: "op_temp_p95_true_c_reduction",
+    label: "95th-percentile operative-temperature reduction",
+    shortLabel: "p95 temperature",
+    unit: "deg C",
+    note: "Reduction in the tail operative-temperature metric.",
+  },
+  {
+    key: "op_temp_hours_gt_28c_reduction",
+    label: "Overheating exposure hours reduced",
+    shortLabel: "Exposure hours",
+    unit: "hours",
+    note: "Threshold: operative temperature above 28 C.",
+  },
+  {
+    key: "joint_hours_reduction",
+    label: "Joint hot-humid exposure hours reduced",
+    shortLabel: "Hot-humid hours",
+    unit: "hours",
+    note: "Thresholds: operative temperature above 28 C and humidity ratio above 0.012 kg/kg.",
+  },
 ];
 
 export const METRICS: AtlasMetric[] = [
@@ -168,4 +202,41 @@ export function f02ParityValues(rows: MetricRow[], scope: "annual" | "seasonal")
     valueOf(byScenario.get(scenario), "op_temp_mean_c"),
     valueOf(byScenario.get(scenario), "op_temp_p95_true_c"),
   ]);
+}
+
+export function dComparisonMetric(key: DComparisonMetricKey) {
+  return D_COMPARISON_METRICS.find((metric) => metric.key === key) ?? D_COMPARISON_METRICS[0];
+}
+
+export function dComparisonParityValues(rows: MetricRow[], metric: DComparisonMetricKey): number[] {
+  return rows.map((row) => valueOf(row, metric));
+}
+
+export function buildDComparisonOption(
+  rows: MetricRow[],
+  metricKey: DComparisonMetricKey,
+  seriesLabel: string,
+  intervention: Scenario,
+): EChartsCoreOption {
+  const metric = dComparisonMetric(metricKey);
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 96, right: 20, top: 18, bottom: 42 },
+    xAxis: { type: "value", name: metric.unit },
+    yAxis: {
+      type: "category",
+      inverse: true,
+      data: rows.map((row) => String(row.climate_short ?? row.climate_region)),
+      axisLabel: { fontSize: 10 },
+    },
+    series: [
+      {
+        name: seriesLabel,
+        type: "bar",
+        itemStyle: { color: SCENARIO_COLOR[intervention] },
+        data: dComparisonParityValues(rows, metricKey),
+        barWidth: "56%",
+      },
+    ],
+  };
 }

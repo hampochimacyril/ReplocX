@@ -27,16 +27,11 @@ FIGURE_REGISTRY_TIER = "f2v3_final"
 SCHEMA_VERSION = "atlas.w1/1.0"
 STRATUM_CONTRACT_VERSION = "atlas.strata/1.0"
 
-CANONICAL_DATA_ROOT = Path(
-    "/Users/cch322/Library/CloudStorage/OneDrive-DrexelUniversity/PhD files/"
-    "PhD_Simulation/PhD Dissertation Framework/04_Analysis/_CANONICAL/10_DATA/"
-    "replocx_tmy3_wallfix_4scen"
-)
-CANONICAL_FIGURE_ROOT = Path(
-    "/Users/cch322/Library/CloudStorage/OneDrive-DrexelUniversity/PhD files/"
-    "PhD_Simulation/PhD Dissertation Framework/04_Analysis/_CANONICAL/20_FIGURES/"
-    "replocx_tmy3_wallfix_4scen/f2v3_final"
-)
+# Container-safe mount defaults. Local development can override both paths with
+# RLE_ATLAS_DATA_DIR and RLE_ATLAS_FIGURE_DIR; never bake owner-specific host
+# paths into the reusable public image.
+CANONICAL_DATA_ROOT = Path("/atlas")
+CANONICAL_FIGURE_ROOT = Path("/atlas-figures")
 
 EXPECTED_SCENARIO_ORDER = ("A", "C", "B", "D")
 EXPECTED_PRIMARY_ENDPOINT_FAMILIES = (

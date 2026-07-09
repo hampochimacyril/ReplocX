@@ -1,7 +1,7 @@
 # W4 Research Atlas release audit
 
-Date: 2026-07-08  
-Branch: `feature/research-atlas`
+Updated: 2026-07-09
+Branch: `codex/atlas-release-candidate`
 
 ## Release state
 
@@ -10,6 +10,9 @@ Branch: `feature/research-atlas`
 - Scenario order: A, C, B, D
 - R9 gate: PASS
 - Figure registry/assets: `f2v3_final` only
+- Interactive parity: PASS — all four intended f2v3 twins (Fig02 and
+  Fig05–Fig07) pass; the other 15 registry figures have explicit
+  not-applicable rationales
 - Equity: READY — 4/4 layers, 20 sidecar-backed catchment records
 - Public demo: Atlas disabled; no private Atlas mount
 - Local release gates: PASS
@@ -41,21 +44,21 @@ Required smoke outcomes:
 The runtime Docker stage uses an allowlist. It copies backend code, generated
 synthetic demo data, the demo ZIP crosswalk, and compiled frontend assets only.
 Private Atlas data, `pipeline/out`, test fixtures, provenance sidecars, docs,
-and canonical f2v3 assets are excluded from both the public build context and
+canonical f2v3 assets, host dependencies/build outputs, Python bytecode, and
+owner-specific host paths are excluded from the public build context and
 runtime image.
 
-## Branch divergence
+## Release-series state
 
-The local ref comparison on 2026-07-08 is 25 commits ahead and 6 commits behind
-`origin/main`. The six `origin/main`-only commits are selection/marketing work;
-their changed paths do not include the Atlas backend, Atlas frontend routes, or
-Atlas tests. Because the worktree contains protected W0–W3 and unrelated dirty
-state, W4 does not merge/rebase it implicitly. Reconcile in a clean worktree
-before publication, rerun all W4 gates, and record the resulting commit.
+N2 created the isolated `codex/atlas-release-candidate` worktree from current
+`origin/main` and transferred only the reviewed Atlas release series. N3 added
+the complete 20-stratum pivot. N4 parity and N5 container-boundary changes are
+being reviewed in this clean worktree; the original mixed
+`feature/research-atlas` index remains untouched.
 
 ## Local verification evidence
 
-Measured on July 8, 2026:
+Measured on July 8–9, 2026:
 
 - `scripts/check_atlas_release.py`: PASS. Basic and app-token gates behaved as
   designed; certified routes reported 720 cells, A/C/B/D, R9 PASS,
@@ -66,21 +69,35 @@ Measured on July 8, 2026:
   coverage was 72%; backend dependency audit found no known vulnerabilities;
   frontend ran 50 tests, typecheck/lint/build passed, and the full disabled-mode
   browser suite ran 13 passed with one expected Atlas-enabled skip.
+- Full f2v3 parity: Fig02 and Fig05–Fig07 checked 61 plotted values with
+  `max|diff| = 0` at absolute tolerance `1e-12`; all 15 omitted twins have
+  explicit rationales.
 - Targeted Atlas Playwright: enabled mode 1 passed/1 skipped; disabled mode
   1 passed/1 skipped. The refreshed desktop, tablet, mobile, equity, exports,
   disabled-state, and contact-sheet screenshots were visually inspected.
 - Known non-blocking audit output: frontend production audit reports one
   moderate ECharts advisory below the configured high-severity failure
   threshold. A breaking ECharts 6.1 upgrade is separate work.
-- Docker is not installed in this environment, so the Compose/Caddy candidate
-  and built image have not yet been exercised as real containers. That remains
-  a pre-live-deployment gate.
+- N5 real-container boundary: PASS on Docker Desktop 4.81.0 / Engine 29.6.1.
+  The actual 13-layer image scan found zero canonical asset basenames,
+  sidecars, secrets, owner host paths, or host bytecode. The actual
+  Caddy/Compose stack passed unauthenticated, Basic-only, and
+  Basic-plus-app-token cases; all analytical mounts rejected writes; the
+  certified route/equity/export audit passed; and all temporary runtime
+  resources were removed. See
+  `docs/atlas/N5_CONTAINER_BOUNDARY_AUDIT_2026-07-09.md`.
 
 ## Final artifact checklist
 
 - [x] A/C/B/D descriptive labels and p95/exposure framing
 - [x] overheating/high-humidity terminology includes threshold notes
 - [x] figure registry, captions, downloads, and provenance resolve to f2v3
+- [x] every intended interactive f2v3 twin passes source-value, ordering,
+  filtering, label, fixture-hash, and provenance-hash parity checks
+- [x] actual public image/rootfs layers contain no canonical assets, sidecars,
+  secrets, owner host paths, or host bytecode
+- [x] actual Caddy + app containers pass the two-layer auth matrix
+- [x] actual analytical bind mounts reject writes
 - [x] sidecar-backed equity state is READY in API/UI/export/provenance contracts
 - [x] desktop/tablet/mobile W2 screenshots retained
 - [x] final W4 screenshots and contact sheet:

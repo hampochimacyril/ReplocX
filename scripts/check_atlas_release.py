@@ -294,8 +294,19 @@ def _runtime_file_scan(figure_dir: Path) -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     _check("COPY . /app" not in dockerfile, "runtime Docker stage has no broad COPY")
     dockerignore = (ROOT / ".dockerignore").read_text(encoding="utf-8")
-    for ignored in ("data/atlas/", "pipeline/out/", "tests/fixtures/atlas/", "docs/atlas/screenshots/"):
+    for ignored in (
+        "data/atlas/",
+        "pipeline/out/",
+        "tests/fixtures/atlas/",
+        "docs/atlas/screenshots/",
+        "**/node_modules/",
+        "**/dist/",
+        "**/__pycache__/",
+        "**/*.py[cod]",
+    ):
         _check(ignored in dockerignore, f"public build context excludes {ignored}")
+    atlas_source = (ROOT / "backend" / "atlas_service.py").read_text(encoding="utf-8")
+    _check("/Users/" not in atlas_source, "runtime Atlas service has no owner-specific host path")
 
     runtime_roots = (
         ROOT / "backend",

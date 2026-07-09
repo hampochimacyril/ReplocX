@@ -364,6 +364,8 @@ class ContractConstantTests(unittest.TestCase):
         self.assertEqual("replocx_tmy3_wallfix_4scen", atlas_service.CERTIFIED_TIER_ID)
         self.assertEqual(720, atlas_service.CERTIFIED_CELL_COUNT)
         self.assertEqual("f2v3_final", atlas_service.FIGURE_REGISTRY_TIER)
+        self.assertEqual(Path("/atlas"), atlas_service.CANONICAL_DATA_ROOT)
+        self.assertEqual(Path("/atlas-figures"), atlas_service.CANONICAL_FIGURE_ROOT)
 
 
 class W4DeploymentContractTests(unittest.TestCase):
@@ -374,6 +376,9 @@ class W4DeploymentContractTests(unittest.TestCase):
         self.assertIn("COPY backend/ /app/backend/", dockerfile)
         for private_path in ("data/atlas/", "pipeline/out/", "tests/fixtures/atlas/"):
             self.assertIn(private_path, dockerignore)
+        for host_artifact in ("**/node_modules/", "**/dist/", "**/__pycache__/", "**/*.py[cod]"):
+            self.assertIn(host_artifact, dockerignore)
+        self.assertNotIn("/Users/", (atlas_service.APP_ROOT / "backend" / "atlas_service.py").read_text())
 
     def test_private_example_has_basic_plus_app_auth_and_read_only_mounts(self) -> None:
         compose = (atlas_service.APP_ROOT / "docker-compose.atlas-private.example.yml").read_text(encoding="utf-8")
