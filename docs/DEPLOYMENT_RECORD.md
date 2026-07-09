@@ -140,7 +140,7 @@ credentials, Docker Engine, and the certified read-only host paths from §2.
 | --- | --- | --- | --- |
 | 2026-06-08 | Session 11 | Prepared private blueprint, runbook, and local verification | Local production verification PASS; live deploy pending owner |
 | 2026-07-08 | Session 17 / W4 | Prepared Atlas Basic+app-token boundary, read-only mounts, public-image allowlist, and clarified selection-demo vs certified-Atlas UI state | Local W4 verification PASS; live deploy and owner sign-off pending |
-| 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; remote reachable; certified smoke PASS; no host/DNS/secret-manager/network target found | Release branch ready for publication; live deploy remains blocked on concrete infrastructure values |
+| 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; remote branch `codex/atlas-release-candidate` published; certified smoke PASS; no host/DNS/secret-manager/network target found | Release branch published; live deploy remains blocked on concrete infrastructure values |
 | _TBD_ | _owner_ | Executed private deploy + post-deploy smoke | _record URL, smoke results_ |
 
 ## 6. Owner sign-off and production release tag

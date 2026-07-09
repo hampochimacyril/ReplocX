@@ -24,6 +24,9 @@
   `git ls-remote origin HEAD` resolved to `c0fb5cb`; the unauthenticated public
   GitHub API returned `404`, so the repository is not publicly discoverable
   through that endpoint.
+- Published the release branch to `origin/codex/atlas-release-candidate`.
+  GitHub returned the pull-request URL:
+  `https://github.com/hampochimacyril/Location-representation-explorer/pull/new/codex/atlas-release-candidate`.
 - Environment-name scan found only `GH_PAGER` and `SSH_AUTH_SOCK` among
   deployment/cloud-related names. No `RLE_*`, cloud-provider, deploy-host, DNS,
   or secret-manager variables were present.
