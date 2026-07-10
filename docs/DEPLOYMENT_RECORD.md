@@ -1,7 +1,7 @@
 # ReplocX Deployment Record
 
 Authoritative record of the ReplocX deployments: the public demo (live) and the
-private production instance (prepared, pending owner-executed deploy + sign-off).
+private production instance (live on Render, pending formal owner sign-off/tag).
 
 ## 1. Public demo — LIVE
 
@@ -29,18 +29,18 @@ before sign-off. `TO CONFIRM` items are completed before live deployment.
 
 | Decision | Value |
 | --- | --- |
-| Host / platform | Render web service from `hampochimacyril/ReplocX`, branch `codex/atlas-release-candidate`; exact service URL **TO CONFIRM** |
+| Host / platform | Render web service `srv-d983c558nd3s73bknkg0` from `hampochimacyril/ReplocX`, branch `codex/atlas-release-candidate`; <https://replocx-private-atlas.onrender.com> |
 | Instance plan | Render paid `starter` Docker web service with persistent disk |
 | Region | Render `oregon` unless owner changes it in the Dashboard |
-| Access-control owner | **TO CONFIRM** (named individual responsible for the token + IP allowlist) |
-| Authentication | Required app token (`RLE_PRIVATE_AUTH_TOKEN`) entered by reviewers; optional Render inbound IP restriction or external Basic-auth proxy for two-layer access |
+| Access-control owner | Owner/operator for the Render workspace; named reviewer/access owner still **TO CONFIRM** for long-term operation |
+| Authentication | Required app token (`RLE_PRIVATE_AUTH_TOKEN`) configured in Render service environment; optional Render inbound IP restriction or external Basic-auth proxy for two-layer access |
 | Network restriction | Render public HTTPS endpoint plus app token; allowed IP/VPN ranges **TO CONFIRM** if using Render inbound IP rules |
 | Persistent storage | Render disk `replocx-private-data` mounted at `/var/data`; SQLite at `/var/data/replocx/scenarios.sqlite3` |
 | National/Atlas data delivery | Out-of-band upload to the Render disk; the public-safe image does not bake `pipeline/out`, `data/atlas`, or f2v3 assets |
 | Data-retention rules | Certified inputs are immutable/reproducible. Scenario database retention and purge policy — **TO CONFIRM** |
 | Backup owner | **TO CONFIRM** (owns VM snapshots and SQLite backup/restore drills) |
-| Budget | Command/download approval granted July 9, 2026; VM, storage/snapshots, DNS, and monitoring spend owner **TO CONFIRM** |
-| Secret manager | **TO CONFIRM** source of truth for Basic credentials and `RLE_PRIVATE_AUTH_TOKEN`; never commit secrets or plaintext hashes |
+| Budget | Command/download/upload approval granted July 9, 2026; Render starter service and disk active; long-term spend owner **TO CONFIRM** |
+| Secret manager | `RLE_PRIVATE_AUTH_TOKEN` currently stored as a Render service environment secret; longer-term source of truth for credential rotation **TO CONFIRM** |
 | Error tracking | Optional Sentry via `RLE_SENTRY_DSN` — **TO CONFIRM** whether enabled |
 | TLS | Render-managed TLS for the `.onrender.com` service domain; custom private DNS **TO CONFIRM** |
 | Exact private repository | Owner-confirmed repository `https://github.com/hampochimacyril/ReplocX.git`, branch `codex/atlas-release-candidate` |
@@ -63,8 +63,9 @@ before sign-off. `TO CONFIRM` items are completed before live deployment.
   200 matrix PASS; app host port absent; all analytical bind mounts read-only;
   certified route, equity, and export audit PASS. Evidence:
   `docs/atlas/N5_CONTAINER_BOUNDARY_AUDIT_2026-07-09.md`.
-- Live deploy remains blocked on the `TO CONFIRM` owner/infrastructure fields.
-  N5 is local container verification, not a live deployment or owner sign-off.
+- Live Render deploy completed after N5; remaining `TO CONFIRM` fields are
+  governance/operations items, not blockers for the running service. N5 remains
+  local container verification, not owner sign-off.
 
 ### Render facts confirmed June 8-July 9, 2026
 
@@ -146,14 +147,14 @@ locally for out-of-band upload.
 | 2026-07-08 | Session 17 / W4 | Prepared Atlas Basic+app-token boundary, read-only mounts, public-image allowlist, and clarified selection-demo vs certified-Atlas UI state | Local W4 verification PASS; live deploy and owner sign-off pending |
 | 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; branch `codex/atlas-release-candidate` published to `hampochimacyril/ReplocX`; certified smoke PASS; no host/DNS/secret-manager/network target found | Correct release branch published; live deploy remains blocked on concrete infrastructure values |
 | 2026-07-09 | Session N6 Render pivot | Owner selected Render from GitHub; root `render.yaml`, data-packaging helper, and Render deploy guide prepared for the release branch | Ready for owner Dashboard deploy; live URL, data upload, smoke, and sign-off pending |
-| _TBD_ | _owner_ | Executed private deploy + post-deploy smoke | _record URL, smoke results_ |
+| 2026-07-10 UTC / 2026-07-09 EDT | Session N6 Render execution | Render service `srv-d983c558nd3s73bknkg0` deployed live from commit `333d59ca76e016dcfd6e711549719fa902a88629`; private data archive uploaded to `/var/data`, checksum `20b16221e3198acfeca352f4ddaf02886e73f4902ab604c9b14495e8cba39329`; macOS `._*` sidecars removed from the disk after extraction | PASS: <https://replocx-private-atlas.onrender.com>; health `status: ok`, `data_mode: production`, `auth.required/configured: true`, `candidate_count: 4019`, `selected_count: 20`; unauthenticated Atlas API `401`; authorized provenance `200`, 720 cells, A/C/B/D, R9 PASS, `f2v3_final`; authorized equity `200`, READY, 20 profiles, 4/4 verified layers |
 
 ## 6. Owner sign-off and production release tag
 
 Tag the production release **only after** owner sign-off and a passing live smoke.
 
 - [ ] Owner sign-off recorded (name + date): ______________________
-- [ ] Live post-deploy smoke PASS (attach output)
+- [x] Live post-deploy smoke PASS (outputs saved locally under `/private/tmp/replocx_*_final*.json`)
 - [ ] No private data or token in logs
 - [ ] First scenario backup taken; VM/volume snapshot and restore owner confirmed
 

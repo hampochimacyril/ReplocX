@@ -22,6 +22,7 @@ require_dir RLE_ATLAS_FIGURE_SOURCE
 
 workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir"' EXIT
+export COPYFILE_DISABLE=1
 
 mkdir -p \
   "$workdir/analysis" \
@@ -31,6 +32,7 @@ mkdir -p \
 cp -R "$RLE_ANALYSIS_SOURCE"/. "$workdir/analysis/"
 cp -R "$RLE_ATLAS_SOURCE"/. "$workdir/atlas/replocx_tmy3_wallfix_4scen/"
 cp -R "$RLE_ATLAS_FIGURE_SOURCE"/. "$workdir/atlas-figures/f2v3_final/"
+find "$workdir" -name '._*' -type f -delete
 
 mkdir -p "$(dirname "$out")"
 tar -czf "$out" -C "$workdir" analysis atlas atlas-figures
