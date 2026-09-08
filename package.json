@@ -16,6 +16,6 @@
     "verify:python": "python3 -m unittest discover -s tests -v"
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.0"
+    "@playwright/test": "^1.63.0"
   }
 }
