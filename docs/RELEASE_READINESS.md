@@ -147,7 +147,7 @@ is well within MapLibre's comfortable range. All API responses are < 200 ms.
 5. **Commit/push must be done on the host.** The audit ran against a fuse mount
    that forbids `unlink`/`rename`, so git cannot manage `.git/index.lock` and a
    stale lock from the harness's own `git status` is present. Commit and push the
-   Session 9 changes from macOS (see `docs/SESSION_HANDOFF.md`).
+   Session 9 changes from macOS (see the internal session hand-off).
 
 ## Bottom line
 

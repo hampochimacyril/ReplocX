@@ -40,5 +40,5 @@ python3 -m http.server 8877 --bind 127.0.0.1
 open http://127.0.0.1:8877/docs/demo/render_demo_video.html
 ```
 
-The renderer includes a hidden DOM handoff field used by Codex/browser automation to
+The renderer includes a hidden DOM handoff field used by browser automation to
 save the generated WebM without publishing or uploading the video.

@@ -2,9 +2,9 @@
 
 This document tracks the path from the current baseline to a verified public demo
 and an approved private production deployment. The authoritative, session-by-session
-execution plan lives in [`NEXT_SESSION_PROMPT.md`](../NEXT_SESSION_PROMPT.md); the
+execution plan lives in the internal session records (not in this repository); the
 running status of each session is recorded in
-[`docs/SESSION_HANDOFF.md`](SESSION_HANDOFF.md).
+the internal session hand-off (not in this repository).
 
 ## Phases
 
@@ -25,8 +25,8 @@ running status of each session is recorded in
 
 ## Guardrails
 
-Carried through every phase (see `CLAUDE.md` and the "Non-Negotiable Product
-Rules" in `NEXT_SESSION_PROMPT.md`):
+Carried through every phase (see the repository's instruction file and the
+"Non-Negotiable Product Rules" in the internal execution plan):
 
 - Preserve exactly 20 climate-region × urbanicity strata; rural→county,
   non-rural→CBSA; leading-zero identifiers as strings; deterministic scoring;

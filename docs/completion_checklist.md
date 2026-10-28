@@ -1,7 +1,7 @@
 # ReplocX Completion Checklist (Final)
 
 Project closeout for the Sessions 0–11 completion and deployment plan
-(`NEXT_SESSION_PROMPT.md`). Status as of June 8, 2026.
+(the internal execution plan). Status as of June 8, 2026.
 
 ## Repository workflow
 
