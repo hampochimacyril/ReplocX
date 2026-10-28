@@ -43,3 +43,6 @@ marketing/*.wav
 marketing/*.mp3
 marketing/ReplocX_demo_*_narrated.mp4
 marketing/captions.srt
+
+# Internal session records (28 October 2026).
+_records/

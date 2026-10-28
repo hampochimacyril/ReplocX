@@ -1,7 +1,7 @@
 # W4 Research Atlas release audit
 
 Updated: 2026-07-09
-Branch: `codex/atlas-release-candidate`
+Branch: `release/atlas-candidate`
 
 ## Release state
 
@@ -50,7 +50,7 @@ runtime image.
 
 ## Release-series state
 
-N2 created the isolated `codex/atlas-release-candidate` worktree from current
+N2 created the isolated `release/atlas-candidate` worktree from current
 `origin/main` and transferred only the reviewed Atlas release series. N3 added
 the complete 20-stratum pivot. N4 parity and N5 container-boundary changes are
 being reviewed in this clean worktree; the original mixed

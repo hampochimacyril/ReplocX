@@ -6,13 +6,13 @@
 > `fa66b47`. No push or pull request was created. The worktree was subsequently
 > moved to `/private/tmp/Developer-atlas-release` so N3 could run in the
 > session's writable sandbox; the branch remains
-> `codex/atlas-release-candidate`.
+> `release/atlas-candidate`.
 
 **Prepared:** 2026-07-08
 
 **Worktree:** `/Users/cch322/Developer-atlas-release`
 
-**Branch:** `codex/atlas-release-candidate`
+**Branch:** `release/atlas-candidate`
 
 **Base:** `origin/main` at `c0fb5cb05f981fe7886261d2c5c2f5be30fa741d`
 
@@ -127,12 +127,12 @@ deleted:
 - `scripts/verify_all.sh`
 - `docs/DEPLOYMENT_RECORD.md`
 - `docs/OPERATIONS_RUNBOOK.md`
-- `docs/SESSION_HANDOFF.md`
+- `_records/docs/SESSION_HANDOFF.md` (internal)
 - `docs/deployment_options.md`
 - `docs/privacy_and_repository_rules.md`
-- `ATLAS_CODEX_PROMPT_PACK_2026-07-07.md`
-- `ATLAS_EXECUTION_PLAN_OPTIMIZED_2026-07-07.md`
-- `ATLAS_POST_W4_SESSION_PLAN_2026-07-08.md`
+- the atlas prompt pack (internal record, not shipped)
+- `_records/ATLAS_EXECUTION_PLAN_OPTIMIZED_2026-07-07.md` (internal)
+- `_records/ATLAS_POST_W4_SESSION_PLAN_2026-07-08.md` (internal)
 
 ## Explicit exclusions
 

@@ -2,7 +2,7 @@
 #
 # Deploy this branch from GitHub:
 #   https://github.com/hampochimacyril/ReplocX
-#   branch: codex/atlas-release-candidate
+#   branch: release/atlas-candidate
 #
 # This Blueprint intentionally does NOT bake certified analysis, Atlas data, or
 # f2v3 figures into the image. It creates a paid Docker web service with a
@@ -22,7 +22,7 @@ services:
     dockerContext: .
     plan: starter
     region: oregon
-    branch: codex/atlas-release-candidate
+    branch: release/atlas-candidate
     healthCheckPath: /api/v1/health
     autoDeployTrigger: off
     disk:

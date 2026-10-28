@@ -172,7 +172,7 @@ The regression suite checks:
 
 ## Deploy the private Atlas candidate (Render)
 
-On branch `codex/atlas-release-candidate`, the bundled [`render.yaml`](render.yaml)
+On branch `release/atlas-candidate`, the bundled [`render.yaml`](render.yaml)
 is a **private Atlas** Render Blueprint. It builds the Docker image from GitHub,
 creates a paid web service, and attaches a `/var/data` persistent disk. Certified
 analysis, Atlas data, and f2v3 figures are still delivered out of band; they are
@@ -180,7 +180,7 @@ not committed to Git or baked into the image.
 
 1. In Render: **New -> Blueprint** and connect
    `https://github.com/hampochimacyril/ReplocX`.
-2. Select branch `codex/atlas-release-candidate` and apply the detected
+2. Select branch `release/atlas-candidate` and apply the detected
    `render.yaml`.
 3. Set the secret `RLE_PRIVATE_AUTH_TOKEN` in the Dashboard.
 4. Upload the private data bundle to `/var/data`, redeploy/restart, then run the
@@ -211,11 +211,11 @@ Confirmed private repository:
 Active branch:
 
 ```bash
-codex/atlas-release-candidate
+release/atlas-candidate
 ```
 
 Render deploy branch:
-[`codex/atlas-release-candidate`](https://github.com/hampochimacyril/ReplocX/tree/codex/atlas-release-candidate)
+[`release/atlas-candidate`](https://github.com/hampochimacyril/ReplocX/tree/release/atlas-candidate)
 
 Review [docs/privacy_and_repository_rules.md](docs/privacy_and_repository_rules.md) before
 adding collaborators, screenshots, deployment targets, or any additional data artifacts.

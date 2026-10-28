@@ -1,7 +1,7 @@
 # N5 real-container boundary audit
 
 Date: 2026-07-09  
-Branch/worktree: `codex/atlas-release-candidate`,
+Branch/worktree: `release/atlas-candidate`,
 `/private/tmp/Developer-atlas-release`  
 Result: **PASS**
 

@@ -28,12 +28,8 @@ find_python_312() {
   local candidate
   local candidates=()
 
-  [[ -n "${CODEX_PYTHON:-}" ]] && candidates+=("$CODEX_PYTHON")
+  [[ -n "${PROJECT_PYTHON:-}" ]] && candidates+=("$PROJECT_PYTHON")
   [[ -n "${PYTHON312:-}" ]] && candidates+=("$PYTHON312")
-
-  for candidate in "$HOME"/.cache/codex-runtimes/*/dependencies/python/bin/python3; do
-    candidates+=("$candidate")
-  done
 
   if command -v python3.12 >/dev/null 2>&1; then
     candidates+=("$(command -v python3.12)")
@@ -97,7 +93,7 @@ if [[ -x "$VENV_DIR/bin/python" ]]; then
     "$VENV_DIR uses the wrong Python version. Remove it and rerun this script with Python 3.12 available."
 else
   PYTHON_BIN="$(find_python_312)" || fail \
-    "Python 3.12 was not found. Set CODEX_PYTHON or PYTHON312 to a Python 3.12 executable and rerun."
+    "Python 3.12 was not found. Set PROJECT_PYTHON or PYTHON312 to a Python 3.12 executable and rerun."
   "$PYTHON_BIN" -m venv "$VENV_DIR"
 fi
 
@@ -106,7 +102,7 @@ fi
 if [[ "$(uname -s)" == "Darwin" ]]; then
   SITE_PACKAGES="$("$VENV_DIR/bin/python" -c 'import site; print(site.getsitepackages()[0])')"
   cat >"$SITE_PACKAGES/sitecustomize.py" <<'PY'
-"""Keep copied subprocess interpreters linked to the bundled Codex Python runtime."""
+"""Keep copied subprocess interpreters linked to the base Python runtime."""
 
 import os
 import sys

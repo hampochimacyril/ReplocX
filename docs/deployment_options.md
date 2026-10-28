@@ -90,7 +90,7 @@ it and the platform enforces read-only Atlas mounts.
 
 For the owner-selected Render execution path, the release branch's root
 `render.yaml` creates a paid Docker web service from
-`hampochimacyril/ReplocX`, branch `codex/atlas-release-candidate`, with a
+`hampochimacyril/ReplocX`, branch `release/atlas-candidate`, with a
 persistent disk mounted at `/var/data`.
 
 This profile keeps private data out of Git and the image. Populate the disk

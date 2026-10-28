@@ -1,6 +1,6 @@
 # Render blueprint EXAMPLE for a private, authenticated deployment.
 #
-# Historical private Render template. On branch `codex/atlas-release-candidate`,
+# Historical private Render template. On branch `release/atlas-candidate`,
 # the root render.yaml is now the owner-selected Render deployment profile. Keep
 # this file as a reference only; never commit actual tokens, Basic-auth
 # credentials, or private data.
@@ -38,7 +38,7 @@ services:
     dockerContext: .
     plan: starter            # paid: required for the persistent disk + no spin-down
     region: oregon
-    branch: codex/atlas-release-candidate
+    branch: release/atlas-candidate
     healthCheckPath: /api/v1/health
     autoDeployTrigger: off   # promote production deploys deliberately, after sign-off
     disk:

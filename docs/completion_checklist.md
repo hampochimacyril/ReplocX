@@ -36,7 +36,7 @@ npm install
 npm run test:e2e
 ```
 
-The current Codex workspace has Node.js but does not have `npm`, `pnpm`, `yarn`, `npx`, or
+The current workspace has Node.js but does not have `npm`, `pnpm`, `yarn`, `npx`, or
 `corepack`, so Playwright dependency installation cannot be verified inside this session.
 
 ## Remaining Research Data Work

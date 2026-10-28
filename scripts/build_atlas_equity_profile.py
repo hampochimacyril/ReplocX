@@ -879,7 +879,7 @@ def main() -> None:
         "tier_id": TIER_ID,
         "class": "equity_profile",
         "generation_timestamp_utc": datetime.now(UTC).isoformat(),
-        "generated_by": "Codex W4 equity source acquisition and rollup pass",
+        "generated_by": "ReplocX W4 equity source acquisition and rollup pass",
         "source_inputs": source_manifest["raw_files"],
         "source_urls": [
             SVI_PAGE,

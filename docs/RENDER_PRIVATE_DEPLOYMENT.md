@@ -5,7 +5,7 @@ Use this path when deploying the private Research Atlas from GitHub to Render.
 ## Source
 
 - GitHub repository: `https://github.com/hampochimacyril/ReplocX`
-- Branch: `codex/atlas-release-candidate`
+- Branch: `release/atlas-candidate`
 - Render Blueprint: `render.yaml`
 
 ## What Render Provides
@@ -28,7 +28,7 @@ Use this path when deploying the private Research Atlas from GitHub to Render.
 
 1. Open:
    `https://dashboard.render.com/blueprint/new?repo=https://github.com/hampochimacyril/ReplocX`
-2. Select branch `codex/atlas-release-candidate`.
+2. Select branch `release/atlas-candidate`.
 3. Review the detected `render.yaml`.
 4. Set the required secret value:
    - `RLE_PRIVATE_AUTH_TOKEN`

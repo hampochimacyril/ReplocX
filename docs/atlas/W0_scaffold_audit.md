@@ -101,9 +101,9 @@ Scope: legacy Research Atlas scaffold on `feature/research-atlas`, before W1 fea
 
 ### Docs
 
-- [docs/SESSION_HANDOFF.md](/Users/cch322/Developer/docs/SESSION_HANDOFF.md:9) records Session 12 as a 540-cell Atlas scaffold.
-- [docs/SESSION_HANDOFF.md](/Users/cch322/Developer/docs/SESSION_HANDOFF.md:15) says data was copied from `_CANONICAL/10_DATA/replocx_tmy3`.
-- [docs/SESSION_HANDOFF.md](/Users/cch322/Developer/docs/SESSION_HANDOFF.md:22) records the existing `/api/v1/results/*` and `/api/v1/equity/*` wiring.
+- [_records/docs/SESSION_HANDOFF.md, line 9](../../_records/docs/SESSION_HANDOFF.md) (internal) records Session 12 as a 540-cell Atlas scaffold.
+- [_records/docs/SESSION_HANDOFF.md, line 15](../../_records/docs/SESSION_HANDOFF.md) (internal) says data was copied from `_CANONICAL/10_DATA/replocx_tmy3`.
+- [_records/docs/SESSION_HANDOFF.md, line 22](../../_records/docs/SESSION_HANDOFF.md) (internal) records the existing `/api/v1/results/*` and `/api/v1/equity/*` wiring.
 - [docs/deployment_options.md](/Users/cch322/Developer/docs/deployment_options.md:1) documents private deployment controls but does not yet mention the Atlas-specific `RLE_ENABLE_ATLAS` off-by-default boundary or the 720-cell/f2v3 guardrails.
 
 ## W0 Resolution

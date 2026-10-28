@@ -1,5 +1,7 @@
 # ReplocX Deployment Record
 
+> Note, 28 October 2026: the release branch was renamed from its earlier name to `release/atlas-candidate`; entries below use the new name.
+
 Authoritative record of the ReplocX deployments: the public demo (live) and the
 private production instance (live on Render, pending formal owner sign-off/tag).
 
@@ -12,7 +14,7 @@ private production instance (live on Render, pending formal owner sign-off/tag).
 | Data mode | `demo` (bundled synthetic `data/demo/`, 2,959 candidates) |
 | Auth | none (open; serves no private data) |
 | Plan | free (spins down after 15 min idle; first request cold-starts ~30 s) |
-| Verified | June 8, 2026 (Session 10) — see `docs/SESSION_HANDOFF.md` |
+| Verified | June 8, 2026 (Session 10) — see `_records/docs/SESSION_HANDOFF.md` (internal) |
 
 The demo never serves the national dataset. This record's remaining sections are
 about the **private** instance only.
@@ -29,7 +31,7 @@ before sign-off. `TO CONFIRM` items are completed before live deployment.
 
 | Decision | Value |
 | --- | --- |
-| Host / platform | Render web service `srv-d983c558nd3s73bknkg0` from `hampochimacyril/ReplocX`, branch `codex/atlas-release-candidate`; <https://replocx-private-atlas.onrender.com> |
+| Host / platform | Render web service `srv-d983c558nd3s73bknkg0` from `hampochimacyril/ReplocX`, branch `release/atlas-candidate`; <https://replocx-private-atlas.onrender.com> |
 | Instance plan | Render paid `starter` Docker web service with persistent disk |
 | Region | Render `oregon` unless owner changes it in the Dashboard |
 | Access-control owner | Owner/operator for the Render workspace; named reviewer/access owner still **TO CONFIRM** for long-term operation |
@@ -43,7 +45,7 @@ before sign-off. `TO CONFIRM` items are completed before live deployment.
 | Secret manager | `RLE_PRIVATE_AUTH_TOKEN` currently stored as a Render service environment secret; longer-term source of truth for credential rotation **TO CONFIRM** |
 | Error tracking | Optional Sentry via `RLE_SENTRY_DSN` — **TO CONFIRM** whether enabled |
 | TLS | Render-managed TLS for the `.onrender.com` service domain; custom private DNS **TO CONFIRM** |
-| Exact private repository | Owner-confirmed repository `https://github.com/hampochimacyril/ReplocX.git`, branch `codex/atlas-release-candidate` |
+| Exact private repository | Owner-confirmed repository `https://github.com/hampochimacyril/ReplocX.git`, branch `release/atlas-candidate` |
 
 ### Research Atlas W4 addendum (July 8, 2026)
 
@@ -123,7 +125,7 @@ locally for out-of-band upload.
 
 1. **Create the Render Blueprint** from
    `https://github.com/hampochimacyril/ReplocX`, branch
-   `codex/atlas-release-candidate`. Render reads `render.yaml`.
+   `release/atlas-candidate`. Render reads `render.yaml`.
 2. **Set the secret** `RLE_PRIVATE_AUTH_TOKEN` in the Render Dashboard.
 3. **Apply the Blueprint.** The first deploy may show degraded data until
    `/var/data` is populated.
@@ -145,7 +147,7 @@ locally for out-of-band upload.
 | --- | --- | --- | --- |
 | 2026-06-08 | Session 11 | Prepared private blueprint, runbook, and local verification | Local production verification PASS; live deploy pending owner |
 | 2026-07-08 | Session 17 / W4 | Prepared Atlas Basic+app-token boundary, read-only mounts, public-image allowlist, and clarified selection-demo vs certified-Atlas UI state | Local W4 verification PASS; live deploy and owner sign-off pending |
-| 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; branch `codex/atlas-release-candidate` published to `hampochimacyril/ReplocX`; certified smoke PASS; no host/DNS/secret-manager/network target found | Correct release branch published; live deploy remains blocked on concrete infrastructure values |
+| 2026-07-09 | Session N6 preflight | Owner granted command/download approval; release commit `a13157d` prepared; branch `release/atlas-candidate` published to `hampochimacyril/ReplocX`; certified smoke PASS; no host/DNS/secret-manager/network target found | Correct release branch published; live deploy remains blocked on concrete infrastructure values |
 | 2026-07-09 | Session N6 Render pivot | Owner selected Render from GitHub; root `render.yaml`, data-packaging helper, and Render deploy guide prepared for the release branch | Ready for owner Dashboard deploy; live URL, data upload, smoke, and sign-off pending |
 | 2026-07-10 UTC / 2026-07-09 EDT | Session N6 Render execution | Render service `srv-d983c558nd3s73bknkg0` deployed live from commit `333d59ca76e016dcfd6e711549719fa902a88629`; private data archive uploaded to `/var/data`, checksum `20b16221e3198acfeca352f4ddaf02886e73f4902ab604c9b14495e8cba39329`; macOS `._*` sidecars removed from the disk after extraction | PASS: <https://replocx-private-atlas.onrender.com>; health `status: ok`, `data_mode: production`, `auth.required/configured: true`, `candidate_count: 4019`, `selected_count: 20`; unauthenticated Atlas API `401`; authorized provenance `200`, 720 cells, A/C/B/D, R9 PASS, `f2v3_final`; authorized equity `200`, READY, 20 profiles, 4/4 verified layers |
 
